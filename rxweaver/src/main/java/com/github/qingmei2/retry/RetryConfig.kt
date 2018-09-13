@@ -1,16 +1,14 @@
 package com.github.qingmei2.retry
 
-import io.reactivex.functions.Function
-
 class RetryConfig(val maxRetries: Int,
                   val delay: Int,
-                  val condition: Function<Throwable, Boolean>) {
+                  val condition: (Throwable) -> Boolean) {
 
     class Builder {
 
         private var maxRetries = DEFAULT_RETRY_TIMES
         private var dealyMilliseconds = DEFAULT_DELAY_DURATION
-        private var condition: Function<Throwable, Boolean> = Function { _ -> true }
+        private var condition: (Throwable) -> Boolean = { _ -> true }
 
         fun setMaxRetries(maxRetries: Int): Builder {
             this.maxRetries = maxRetries
@@ -22,7 +20,7 @@ class RetryConfig(val maxRetries: Int,
             return this
         }
 
-        fun setCondition(condition: Function<Throwable, Boolean>): Builder {
+        fun setCondition(condition: (Throwable) -> Boolean): Builder {
             this.condition = condition
             return this
         }

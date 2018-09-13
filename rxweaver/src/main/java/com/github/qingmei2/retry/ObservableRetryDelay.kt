@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit
 
 class ObservableRetryDelay(
         @NonNull retryConfig: RetryConfig
-) : RetryFuction<Observable<Throwable>, ObservableSource<*>> {
+) : Function<Observable<Throwable>, ObservableSource<*>> {
 
     private val maxRetries: Int
     private val delay: Int
-    private val condition: Function<Throwable, Boolean>
+    private val condition: (Throwable) -> Boolean
 
     private var retryCount: Int = 0
 
@@ -26,7 +26,7 @@ class ObservableRetryDelay(
     override fun apply(@NonNull throwableObservable: Observable<Throwable>): ObservableSource<*> {
         return throwableObservable
                 .flatMap(Function<Throwable, ObservableSource<*>> { throwable ->
-                    if (!condition.apply(throwable))
+                    if (!condition(throwable))
                         return@Function Observable.error<Any>(throwable)
 
                     if (++retryCount <= maxRetries) {
