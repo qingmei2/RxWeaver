@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchSimpleError() {
-        Observable.error(ConnectException())
+        Observable.error<BaseEntity>(ConnectException())
+                .compose(WeaverHelper.handleGlobalError<BaseEntity>(this))
     }
 }
