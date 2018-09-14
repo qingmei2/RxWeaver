@@ -1,6 +1,7 @@
 package com.github.qingmei2.model
 
 import android.app.Activity.RESULT_OK
+import android.content.Context
 import android.content.Intent
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
@@ -26,6 +27,12 @@ class NavigatorFragment : Fragment() {
             val navigatorFragment = fragment as NavigatorFragment
             navigatorFragment.startLoginSingle()
         }
+    }
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        attachSubject.onNext(true)
+        attachSubject.onComplete()
     }
 
     private fun startLoginSingle(): Single<Boolean> {
