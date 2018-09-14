@@ -1,9 +1,9 @@
 package com.github.qingmei2
 
 open class BaseEntity {
-    val statusCode: Int = 0
-    val message: String = ""
+    var statusCode: Int = 0
+    var message: String = ""
 }
 
-data class UserInfo(val username: String,
-                    val age: Int) : BaseEntity()
+data class UserInfo(val username: String = "",
+                    val age: Int = 0) : BaseEntity()

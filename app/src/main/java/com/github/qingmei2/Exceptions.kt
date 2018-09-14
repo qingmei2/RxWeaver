@@ -1,7 +1,9 @@
 package com.github.qingmei2
 
-import com.github.qingmei2.core.ThrowableDelegate
+import com.github.qingmei2.core.RxThrowable
 
-class ConnectFailedAlertDialogException : ThrowableDelegate(1000, "Connect Failed")
+class ConnectFailedAlertDialogException : RxThrowable(-1, "Connect Failed")
 
-class ReLoginAndRetryException(entity: BaseEntity) : ThrowableDelegate(entity.statusCode, entity.message)
+class ReLoginSuccessAndRetryException(entity: BaseEntity) : RxThrowable(entity.statusCode, entity.message)
+
+class ReLoginFailedException(entity: BaseEntity) : RxThrowable(entity.statusCode, entity.message)

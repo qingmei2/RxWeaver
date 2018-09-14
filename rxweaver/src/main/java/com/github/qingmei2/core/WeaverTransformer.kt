@@ -9,9 +9,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 class WeaverTransformer<T> constructor(
         private val upStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
         private val downStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
-        private val globalOnNextInterceptor: (T) -> Single<ThrowableDelegate>,
-        private val globalOnErrorResumeTransformer: (Throwable) -> Single<ThrowableDelegate>,
-        private val retryConfigProvider: () -> RetryConfig,
+        private val globalOnNextInterceptor: (T) -> Single<RxThrowable>,
+        private val globalOnErrorResumeTransformer: (Throwable) -> Single<RxThrowable>,
+        private val retryConfigProvider: (Throwable) -> RetryConfig,
         private val globalDoOnErrorConsumer: (Throwable) -> Unit
 ) : ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
@@ -25,18 +25,18 @@ class WeaverTransformer<T> constructor(
                     .flatMap {
                         globalOnNextInterceptor(it)
                                 .flatMapObservable { rxerror ->
-                                    if (rxerror !== ThrowableDelegate.EMPTY) Observable.error(rxerror) else Observable.just(it)
+                                    if (rxerror !== RxThrowable.EMPTY) Observable.error(rxerror) else Observable.just(it)
                                 }
                     }
                     .onErrorResumeNext { throwable: Throwable ->
                         globalOnErrorResumeTransformer(throwable)
                                 .flatMapObservable { rxerror ->
                                     Observable.error<T> {
-                                        if (rxerror !== ThrowableDelegate.EMPTY) rxerror else throwable
+                                        if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
                                     }
                                 }
                     }
-                    .retryWhen(ObservableRetryDelay(retryConfigProvider()))
+                    .retryWhen(ObservableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -45,9 +45,9 @@ class WeaverTransformer<T> constructor(
                     .observeOn(upStreamSchedulerProvider())
                     .onErrorResumeNext {
                         globalOnErrorResumeTransformer(it)
-                                .flatMapCompletable { rxerror -> Completable.error(if (rxerror !== ThrowableDelegate.EMPTY) rxerror else it) }
+                                .flatMapCompletable { rxerror -> Completable.error(if (rxerror !== RxThrowable.EMPTY) rxerror else it) }
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider()))
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -57,18 +57,18 @@ class WeaverTransformer<T> constructor(
                     .flatMap {
                         globalOnNextInterceptor(it)
                                 .flatMapPublisher { rxerror ->
-                                    if (rxerror !== ThrowableDelegate.EMPTY) Flowable.error(rxerror) else Flowable.just(it)
+                                    if (rxerror !== RxThrowable.EMPTY) Flowable.error(rxerror) else Flowable.just(it)
                                 }
                     }
                     .onErrorResumeNext { throwable: Throwable ->
                         globalOnErrorResumeTransformer(throwable)
                                 .flatMapPublisher { rxerror ->
                                     Flowable.error<T> {
-                                        if (rxerror !== ThrowableDelegate.EMPTY) rxerror else throwable
+                                        if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
                                     }
                                 }
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider()))
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -78,18 +78,18 @@ class WeaverTransformer<T> constructor(
                     .flatMap {
                         globalOnNextInterceptor(it)
                                 .flatMapMaybe { rxerror ->
-                                    if (rxerror !== ThrowableDelegate.EMPTY) Maybe.error(rxerror) else Maybe.just(it)
+                                    if (rxerror !== RxThrowable.EMPTY) Maybe.error(rxerror) else Maybe.just(it)
                                 }
                     }
                     .onErrorResumeNext { throwable: Throwable ->
                         globalOnErrorResumeTransformer(throwable)
                                 .flatMapMaybe { rxerror ->
                                     Maybe.error<T> {
-                                        if (rxerror !== ThrowableDelegate.EMPTY) rxerror else throwable
+                                        if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
                                     }
                                 }
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider()))
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -99,14 +99,14 @@ class WeaverTransformer<T> constructor(
                     .flatMap {
                         globalOnNextInterceptor(it)
                                 .flatMap { rxerror ->
-                                    if (rxerror !== ThrowableDelegate.EMPTY) Single.error(rxerror) else Single.just(it)
+                                    if (rxerror !== RxThrowable.EMPTY) Single.error(rxerror) else Single.just(it)
                                 }
                     }
                     .onErrorResumeNext {
                         globalOnErrorResumeTransformer(it)
-                                .flatMap { rxerror -> Single.error<T>(if (rxerror !== ThrowableDelegate.EMPTY) rxerror else it) }
+                                .flatMap { rxerror -> Single.error<T>(if (rxerror !== RxThrowable.EMPTY) rxerror else it) }
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider()))
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 }

@@ -4,11 +4,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.github.qingmei2.MainActivity">
+    tools:context="com.github.qingmei2.activity.MainActivity">
 
     <Button
         android:id="@+id/btnSimpleError"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="模拟网络请求简单异常" />
+        android:text="简单的全局异常处理Toast" />
+
+    <Button
+        android:id="@+id/btnConnectError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="连接超时异常，弹出一个Dialog重试" />
+
+    <Button
+        android:id="@+id/btnTokenError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="token失效，跳转login，成功后重试" />
 </LinearLayout>

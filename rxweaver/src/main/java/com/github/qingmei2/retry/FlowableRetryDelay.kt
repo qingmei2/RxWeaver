@@ -7,29 +7,21 @@ import org.reactivestreams.Publisher
 import java.util.concurrent.TimeUnit
 
 class FlowableRetryDelay(
-        @NonNull retryConfig: RetryConfig
+        val provider: (Throwable) -> RetryConfig
 ) : Function<Flowable<Throwable>, Publisher<*>> {
 
-    private val maxRetries: Int
-    private val delay: Int
     private var retryCount: Int = 0
-
-    private val condition: (Throwable) -> Boolean
-
-    init {
-        this.maxRetries = retryConfig.maxRetries
-        this.delay = retryConfig.delay
-        this.condition = retryConfig.condition
-    }
 
     @Throws(Exception::class)
     override fun apply(@NonNull throwableFlowable: Flowable<Throwable>): Publisher<*> {
         return throwableFlowable
                 .flatMap(Function<Throwable, Publisher<*>> { throwable ->
-                    if (!condition(throwable))
+                    val (maxRetries, delay, retryCondition) = provider(throwable)
+
+                    if (!retryCondition)
                         return@Function Flowable.error<Any>(throwable)
 
-                    if (++retryCount <= maxRetries) {
+                    if (++retryCount < maxRetries) {
                         Flowable.timer(delay.toLong(), TimeUnit.MILLISECONDS)
                     } else Flowable.error<Any>(throwable)
                 })
