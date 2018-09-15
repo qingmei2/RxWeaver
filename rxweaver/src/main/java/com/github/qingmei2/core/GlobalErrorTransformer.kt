@@ -6,7 +6,7 @@ import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 
-class WeaverTransformer<T> constructor(
+class GlobalErrorTransformer<T> constructor(
         private val upStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
         private val downStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
         private val globalOnNextInterceptor: (T) -> Single<RxThrowable>,

@@ -33,8 +33,8 @@ dependencies {
 
     implementation libs.kotlin_stdlib
 
-    compileOnly libs.rxkotlin
-    compileOnly libs.rxandroid
+    implementation libs.rxjava
+    implementation libs.rxandroid
 
     testImplementation libs.junit
 }

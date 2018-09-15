@@ -5,7 +5,7 @@ package com.github.qingmei2
 import android.support.v4.app.FragmentActivity
 import android.widget.Toast
 import com.github.qingmei2.core.RxThrowable
-import com.github.qingmei2.core.WeaverTransformer
+import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
 import com.github.qingmei2.retry.RetryConfig
@@ -29,7 +29,7 @@ object WeaverHelper {
     private const val SERVICE_UNAVAILABLE = 503
     private const val GATEWAY_TIMEOUT = 504
 
-    fun <T : BaseEntity> handleGlobalError(context: FragmentActivity): WeaverTransformer<T> = WeaverTransformer(
+    fun <T : BaseEntity> handleGlobalError(context: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             upStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
 
