@@ -28,7 +28,7 @@ public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publish
                         if (retryConfig.isRetryCondition()) {
                             return Flowable.error(throwable);
                         }
-                        if (++retryCount <= retryConfig.getMaxRetries()) {
+                        if (++retryCount < retryConfig.getMaxRetries()) {
                             return Flowable.timer(retryConfig.getDelay(), TimeUnit.MILLISECONDS);
                         }
                         return Flowable.error(throwable);

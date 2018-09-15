@@ -31,8 +31,8 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
         MaybeTransformer<T, T>,
         CompletableTransformer {
 
-    private Scheduler upStreamSchedulerProvider;
-    private Scheduler downStreamSchedlerProvider;
+    private Suppiler<Scheduler> upStreamSchedulerProvider;
+    private Suppiler<Scheduler> downStreamSchedlerProvider;
     private Function<T, Single<RxThrowable>> globalOnNextInterceptor;
     private Function<Throwable, Single<RxThrowable>> globalOnErrorResumeTransformer;
     private Function<Throwable, RetryConfig> retryConfigProvider;
@@ -43,8 +43,8 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                                   Function<Throwable, RetryConfig> retryConfigProvider,
                                   Consumer<Throwable> globalDoOnErrorConsumer) {
         this(
-                AndroidSchedulers.mainThread(),
-                AndroidSchedulers.mainThread(),
+                AndroidSchedulers::mainThread,
+                AndroidSchedulers::mainThread,
                 globalOnNextInterceptor,
                 globalOnErrorResumeTransformer,
                 retryConfigProvider,
@@ -52,8 +52,8 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
         );
     }
 
-    public GlobalErrorTransformer(Scheduler upStreamSchedulerProvider,
-                                  Scheduler downStreamSchedlerProvider,
+    public GlobalErrorTransformer(Suppiler<Scheduler> upStreamSchedulerProvider,
+                                  Suppiler<Scheduler> downStreamSchedlerProvider,
                                   Function<T, Single<RxThrowable>> globalOnNextInterceptor,
                                   Function<Throwable, Single<RxThrowable>> globalOnErrorResumeTransformer,
                                   Function<Throwable, RetryConfig> retryConfigProvider,
@@ -69,7 +69,7 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
         return upstream
-                .observeOn(upStreamSchedulerProvider)
+                .observeOn(upStreamSchedulerProvider.call())
                 .flatMap(new Function<T, ObservableSource<T>>() {
                     @Override
                     public ObservableSource<T> apply(final T t) throws Exception {
@@ -96,13 +96,13 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new ObservableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider);
+                .observeOn(downStreamSchedlerProvider.call());
     }
 
     @Override
     public CompletableSource apply(Completable upstream) {
         return upstream
-                .observeOn(upStreamSchedulerProvider)
+                .observeOn(upStreamSchedulerProvider.call())
                 .onErrorResumeNext(new Function<Throwable, CompletableSource>() {
                     @Override
                     public CompletableSource apply(final Throwable throwable) throws Exception {
@@ -117,13 +117,13 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider);
+                .observeOn(downStreamSchedlerProvider.call());
     }
 
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
         return upstream
-                .observeOn(upStreamSchedulerProvider)
+                .observeOn(upStreamSchedulerProvider.call())
                 .flatMap(new Function<T, Publisher<T>>() {
                     @Override
                     public Publisher<T> apply(final T t) throws Exception {
@@ -153,13 +153,13 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider);
+                .observeOn(downStreamSchedlerProvider.call());
     }
 
     @Override
     public MaybeSource<T> apply(Maybe<T> upstream) {
         return upstream
-                .observeOn(upStreamSchedulerProvider)
+                .observeOn(upStreamSchedulerProvider.call())
                 .flatMap(new Function<T, MaybeSource<T>>() {
                     @Override
                     public MaybeSource<T> apply(final T t) throws Exception {
@@ -189,13 +189,13 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider);
+                .observeOn(downStreamSchedlerProvider.call());
     }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
         return upstream
-                .observeOn(upStreamSchedulerProvider)
+                .observeOn(upStreamSchedulerProvider.call())
                 .flatMap(new Function<T, SingleSource<T>>() {
                     @Override
                     public SingleSource<T> apply(final T t) throws Exception {
@@ -222,6 +222,6 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider);
+                .observeOn(downStreamSchedlerProvider.call());
     }
 }

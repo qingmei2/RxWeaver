@@ -4,13 +4,17 @@ package com.github.qingmei2
 
 import android.support.v4.app.FragmentActivity
 import android.widget.Toast
-import com.github.qingmei2.kotlin.core.RxThrowable
-import com.github.qingmei2.kotlin.core.GlobalErrorTransformer
+import com.github.qingmei2.core.GlobalErrorTransformer
+import com.github.qingmei2.core.RxThrowable
+import com.github.qingmei2.core.Suppiler
 import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
-import com.github.qingmei2.kotlin.retry.RetryConfig
+import com.github.qingmei2.retry.RetryConfig
+import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Consumer
+import io.reactivex.functions.Function
 import org.json.JSONException
 import java.net.ConnectException
 
@@ -31,12 +35,16 @@ object WeaverHelper {
 
     fun <T : BaseEntity> handleGlobalError(context: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
-            upStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
+            Suppiler<Scheduler> {
+                AndroidSchedulers.mainThread()
+            },
 
-            downStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
+            Suppiler<Scheduler> {
+                AndroidSchedulers.mainThread()
+            },
 
             // 通过onNext流中数据的状态进行操作
-            globalOnNextInterceptor = {
+            Function<T, Single<RxThrowable>> { it ->
                 when (it.statusCode) {
                     STATUS_UNAUTHORIZED -> {
                         Toast.makeText(context, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
@@ -57,7 +65,7 @@ object WeaverHelper {
             },
 
             // 通过onError中Throwable状态进行操作
-            globalOnErrorResumeTransformer = { error ->
+            Function<Throwable, Single<RxThrowable>> { error ->
                 when (error) {
                     is ConnectException -> {
                         RxDialog.showErrorDialog(context, "ConnectException")
@@ -73,15 +81,15 @@ object WeaverHelper {
                 }
             },
 
-            retryConfigProvider = { error ->
+            Function<Throwable, RetryConfig> { error ->
                 when (error) {
-                    is ConnectFailedAlertDialogException -> RetryConfig(retryCondition = true)
-                    is ReLoginSuccessAndRetryException -> RetryConfig(delay = 3000, retryCondition = true)
-                    else -> RetryConfig(retryCondition = false) // 其它异常都不重试,比如ReLoginFailedException
+                    is ConnectFailedAlertDialogException -> RetryConfig(1, 1000, true)
+                    is ReLoginSuccessAndRetryException -> RetryConfig(1, 3000, true)
+                    else -> RetryConfig() // 其它异常都不重试,比如ReLoginFailedException
                 }
             },
 
-            globalDoOnErrorConsumer = { error ->
+            Consumer<Throwable> { error ->
                 when (error) {
                     is JSONException -> {
                         Toast.makeText(context, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()

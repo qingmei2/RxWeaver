@@ -26,7 +26,7 @@ public class ObservableRetryDelay implements Function<Observable<Throwable>, Obs
                         if (retryConfig.isRetryCondition()) {
                             return Observable.error(throwable);
                         }
-                        if (++retryCount <= retryConfig.getMaxRetries()) {
+                        if (++retryCount < retryConfig.getMaxRetries()) {
                             return Observable.timer(retryConfig.getDelay(), TimeUnit.MILLISECONDS);
                         }
                         return Observable.error(throwable);
