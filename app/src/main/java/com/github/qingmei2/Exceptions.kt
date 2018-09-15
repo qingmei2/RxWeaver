@@ -1,6 +1,6 @@
 package com.github.qingmei2
 
-import com.github.qingmei2.core.RxThrowable
+import com.github.qingmei2.kotlin.core.RxThrowable
 
 class ConnectFailedAlertDialogException : RxThrowable(-1, "Connect Failed")
 

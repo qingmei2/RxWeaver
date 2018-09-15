@@ -4,11 +4,11 @@ package com.github.qingmei2
 
 import android.support.v4.app.FragmentActivity
 import android.widget.Toast
-import com.github.qingmei2.core.RxThrowable
-import com.github.qingmei2.core.GlobalErrorTransformer
+import com.github.qingmei2.kotlin.core.RxThrowable
+import com.github.qingmei2.kotlin.core.GlobalErrorTransformer
 import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
-import com.github.qingmei2.retry.RetryConfig
+import com.github.qingmei2.kotlin.retry.RetryConfig
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import org.json.JSONException

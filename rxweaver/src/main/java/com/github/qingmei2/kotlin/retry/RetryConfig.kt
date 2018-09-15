@@ -1,4 +1,4 @@
-package com.github.qingmei2.retry
+package com.github.qingmei2.kotlin.retry
 
 private const val DEFAULT_RETRY_TIMES = 1
 private const val DEFAULT_DELAY_DURATION = 1000

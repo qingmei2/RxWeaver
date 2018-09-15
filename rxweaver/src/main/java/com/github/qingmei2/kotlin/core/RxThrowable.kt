@@ -1,4 +1,4 @@
-package com.github.qingmei2.core
+package com.github.qingmei2.kotlin.core
 
 open class RxThrowable(
         private val customStatusCode: Int,

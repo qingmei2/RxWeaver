@@ -1,4 +1,4 @@
-package com.github.qingmei2.retry
+package com.github.qingmei2.kotlin.retry
 
 import io.reactivex.Flowable
 import io.reactivex.annotations.NonNull

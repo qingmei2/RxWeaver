@@ -1,8 +1,8 @@
-package com.github.qingmei2.core
+package com.github.qingmei2.kotlin.core
 
-import com.github.qingmei2.retry.FlowableRetryDelay
-import com.github.qingmei2.retry.ObservableRetryDelay
-import com.github.qingmei2.retry.RetryConfig
+import com.github.qingmei2.kotlin.retry.FlowableRetryDelay
+import com.github.qingmei2.kotlin.retry.ObservableRetryDelay
+import com.github.qingmei2.kotlin.retry.RetryConfig
 import io.reactivex.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 
