@@ -1,4 +1,4 @@
-package com.github.qingmei2.java.retry;
+package com.github.qingmei2.retry;
 
 import org.reactivestreams.Publisher;
 
@@ -10,11 +10,11 @@ import io.reactivex.functions.Function;
 
 public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publisher<?>> {
 
-    private RetryConfig retryConfig;
+    private Function<Throwable, RetryConfig> provider;
     private int retryCount;
 
-    public FlowableRetryDelay(@NonNull RetryConfig retryConfig) {
-        this.retryConfig = retryConfig;
+    public FlowableRetryDelay(Function<Throwable, RetryConfig> provider) {
+        this.provider = provider;
     }
 
     @Override
@@ -23,6 +23,8 @@ public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publish
                 .flatMap(new Function<Throwable, Publisher<?>>() {
                     @Override
                     public Publisher<?> apply(@NonNull Throwable throwable) throws Exception {
+                        RetryConfig retryConfig = provider.apply(throwable);
+
                         if (retryConfig.isRetryCondition()) {
                             return Flowable.error(throwable);
                         }

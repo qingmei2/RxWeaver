@@ -1,4 +1,4 @@
-package com.github.qingmei2.java.retry;
+package com.github.qingmei2.retry;
 
 public class RetryConfig {
 

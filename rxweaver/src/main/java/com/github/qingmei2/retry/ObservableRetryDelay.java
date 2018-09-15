@@ -1,5 +1,4 @@
-package com.github.qingmei2.java.retry;
-
+package com.github.qingmei2.retry;
 
 import java.util.concurrent.TimeUnit;
 
@@ -9,11 +8,11 @@ import io.reactivex.functions.Function;
 
 public class ObservableRetryDelay implements Function<Observable<Throwable>, ObservableSource<?>> {
 
-    private RetryConfig retryConfig;
+    private Function<Throwable, RetryConfig> provider;
     private int retryCount;
 
-    public ObservableRetryDelay(RetryConfig retryConfig) {
-        this.retryConfig = retryConfig;
+    public ObservableRetryDelay(Function<Throwable, RetryConfig> provider) {
+        this.provider = provider;
     }
 
     @Override
@@ -22,6 +21,8 @@ public class ObservableRetryDelay implements Function<Observable<Throwable>, Obs
                 .flatMap(new Function<Throwable, ObservableSource<?>>() {
                     @Override
                     public ObservableSource<?> apply(Throwable throwable) throws Exception {
+                        RetryConfig retryConfig = provider.apply(throwable);
+
                         if (retryConfig.isRetryCondition()) {
                             return Observable.error(throwable);
                         }

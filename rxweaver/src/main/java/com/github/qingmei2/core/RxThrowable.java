@@ -1,10 +1,11 @@
-package com.github.qingmei2.java.core;
+package com.github.qingmei2.core;
 
 public class RxThrowable extends Throwable {
 
     public static RxThrowable EMPTY = new RxThrowable(0, "");
 
     private int customStatusCode;
+
     private String customErrorMessage;
 
     public RxThrowable(int customStatusCode, String customErrorMessage) {

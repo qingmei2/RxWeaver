@@ -1,9 +1,8 @@
-package com.github.qingmei2.java.core;
+package com.github.qingmei2.core;
 
-
-import com.github.qingmei2.java.retry.FlowableRetryDelay;
-import com.github.qingmei2.java.retry.ObservableRetryDelay;
-import com.github.qingmei2.java.retry.RetryConfig;
+import com.github.qingmei2.retry.FlowableRetryDelay;
+import com.github.qingmei2.retry.ObservableRetryDelay;
+import com.github.qingmei2.retry.RetryConfig;
 
 import org.reactivestreams.Publisher;
 
@@ -26,7 +25,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 
-public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
+public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
         SingleTransformer<T, T>,
         MaybeTransformer<T, T>,
@@ -34,15 +33,15 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
 
     private Scheduler upStreamSchedulerProvider;
     private Scheduler downStreamSchedlerProvider;
-    private Single<Throwable> globalOnNextInterceptor;
-    private Single<Throwable> globalOnErrorResumeTransformer;
-    private RetryConfig retryConfigProvider;
+    private Function<T, Single<RxThrowable>> globalOnNextInterceptor;
+    private Function<Throwable, Single<RxThrowable>> globalOnErrorResumeTransformer;
+    private Function<Throwable, RetryConfig> retryConfigProvider;
     private Consumer<Throwable> globalDoOnErrorConsumer;
 
-    public WeaverTransformer(Single<Throwable> globalOnNextInterceptor,
-                             Single<Throwable> globalOnErrorResumeTransformer,
-                             RetryConfig retryConfigProvider,
-                             Consumer<Throwable> globalDoOnErrorConsumer) {
+    public GlobalErrorTransformer(Function<T, Single<RxThrowable>> globalOnNextInterceptor,
+                                  Function<Throwable, Single<RxThrowable>> globalOnErrorResumeTransformer,
+                                  Function<Throwable, RetryConfig> retryConfigProvider,
+                                  Consumer<Throwable> globalDoOnErrorConsumer) {
         this(
                 AndroidSchedulers.mainThread(),
                 AndroidSchedulers.mainThread(),
@@ -53,12 +52,12 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
         );
     }
 
-    public WeaverTransformer(Scheduler upStreamSchedulerProvider,
-                             Scheduler downStreamSchedlerProvider,
-                             Single<Throwable> globalOnNextInterceptor,
-                             Single<Throwable> globalOnErrorResumeTransformer,
-                             RetryConfig retryConfigProvider,
-                             Consumer<Throwable> globalDoOnErrorConsumer) {
+    public GlobalErrorTransformer(Scheduler upStreamSchedulerProvider,
+                                  Scheduler downStreamSchedlerProvider,
+                                  Function<T, Single<RxThrowable>> globalOnNextInterceptor,
+                                  Function<Throwable, Single<RxThrowable>> globalOnErrorResumeTransformer,
+                                  Function<Throwable, RetryConfig> retryConfigProvider,
+                                  Consumer<Throwable> globalDoOnErrorConsumer) {
         this.upStreamSchedulerProvider = upStreamSchedulerProvider;
         this.downStreamSchedlerProvider = downStreamSchedlerProvider;
         this.globalOnNextInterceptor = globalOnNextInterceptor;
@@ -74,7 +73,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .flatMap(new Function<T, ObservableSource<T>>() {
                     @Override
                     public ObservableSource<T> apply(final T t) throws Exception {
-                        return globalOnNextInterceptor
+                        return globalOnNextInterceptor.apply(t)
                                 .flatMapObservable(new Function<Throwable, ObservableSource<? extends T>>() {
                                     @Override
                                     public ObservableSource<? extends T> apply(Throwable throwable) throws Exception {
@@ -86,7 +85,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .onErrorResumeNext(new Function<Throwable, ObservableSource<? extends T>>() {
                     @Override
                     public ObservableSource<? extends T> apply(final Throwable throwable) throws Exception {
-                        return globalOnErrorResumeTransformer
+                        return globalOnErrorResumeTransformer.apply(throwable)
                                 .flatMapObservable(new Function<Throwable, ObservableSource<? extends T>>() {
                                     @Override
                                     public ObservableSource<? extends T> apply(Throwable rxerror) throws Exception {
@@ -107,7 +106,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .onErrorResumeNext(new Function<Throwable, CompletableSource>() {
                     @Override
                     public CompletableSource apply(final Throwable throwable) throws Exception {
-                        return globalOnErrorResumeTransformer
+                        return globalOnErrorResumeTransformer.apply(throwable)
                                 .flatMapCompletable(new Function<Throwable, CompletableSource>() {
                                     @Override
                                     public CompletableSource apply(Throwable rxerror) throws Exception {
@@ -128,7 +127,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .flatMap(new Function<T, Publisher<T>>() {
                     @Override
                     public Publisher<T> apply(final T t) throws Exception {
-                        return globalOnNextInterceptor
+                        return globalOnNextInterceptor.apply(t)
                                 .flatMapPublisher(new Function<Throwable, Publisher<? extends T>>() {
                                     @Override
                                     public Publisher<? extends T> apply(Throwable throwable) throws Exception {
@@ -143,17 +142,11 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .onErrorResumeNext(new Function<Throwable, Publisher<T>>() {
                     @Override
                     public Publisher<T> apply(Throwable throwable) throws Exception {
-                        return globalOnErrorResumeTransformer
+                        return globalOnErrorResumeTransformer.apply(throwable)
                                 .flatMapPublisher(new Function<Throwable, Publisher<T>>() {
                                     @Override
                                     public Publisher<T> apply(final Throwable throwable) throws Exception {
-                                        return globalOnErrorResumeTransformer
-                                                .flatMapPublisher(new Function<Throwable, Publisher<T>>() {
-                                                    @Override
-                                                    public Publisher<T> apply(Throwable rxerror) throws Exception {
-                                                        return Flowable.error(rxerror != RxThrowable.EMPTY ? rxerror : throwable);
-                                                    }
-                                                });
+                                        return Flowable.error(throwable != RxThrowable.EMPTY ? throwable : throwable);
                                     }
                                 });
                     }
@@ -170,7 +163,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .flatMap(new Function<T, MaybeSource<T>>() {
                     @Override
                     public MaybeSource<T> apply(final T t) throws Exception {
-                        return globalOnNextInterceptor
+                        return globalOnNextInterceptor.apply(t)
                                 .flatMapMaybe(new Function<Throwable, MaybeSource<? extends T>>() {
                                     @Override
                                     public MaybeSource<T> apply(Throwable throwable) throws Exception {
@@ -185,7 +178,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .onErrorResumeNext(new Function<Throwable, MaybeSource<T>>() {
                     @Override
                     public MaybeSource<T> apply(final Throwable throwable) throws Exception {
-                        return globalOnErrorResumeTransformer
+                        return globalOnErrorResumeTransformer.apply(throwable)
                                 .flatMapMaybe(new Function<Throwable, MaybeSource<? extends T>>() {
                                     @Override
                                     public MaybeSource<? extends T> apply(Throwable rxerror) throws Exception {
@@ -206,7 +199,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .flatMap(new Function<T, SingleSource<T>>() {
                     @Override
                     public SingleSource<T> apply(final T t) throws Exception {
-                        return globalOnNextInterceptor
+                        return globalOnNextInterceptor.apply(t)
                                 .flatMap(new Function<Throwable, SingleSource<? extends T>>() {
                                     @Override
                                     public SingleSource<? extends T> apply(Throwable throwable) throws Exception {
@@ -218,7 +211,7 @@ public class WeaverTransformer<T> implements ObservableTransformer<T, T>,
                 .onErrorResumeNext(new Function<Throwable, SingleSource<T>>() {
                     @Override
                     public SingleSource<T> apply(final Throwable throwable) throws Exception {
-                        return globalOnErrorResumeTransformer
+                        return globalOnErrorResumeTransformer.apply(throwable)
                                 .flatMap(new Function<Throwable, SingleSource<? extends T>>() {
                                     @Override
                                     public SingleSource<? extends T> apply(Throwable rxerror) throws Exception {
