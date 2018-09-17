@@ -27,16 +27,16 @@ class GlobalErrorTransformer<T> constructor(
                                 .flatMapObservable { rxerror ->
                                     if (rxerror !== RxThrowable.EMPTY) Observable.error(rxerror) else Observable.just(it)
                                 }
-                    }
-                    .onErrorResumeNext { throwable: Throwable ->
-                        globalOnErrorResumeTransformer(throwable)
-                                .flatMapObservable { rxerror ->
-                                    Observable.error<T> {
-                                        if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
-                                    }
+                                .onErrorResumeNext { throwable: Throwable ->
+                                    globalOnErrorResumeTransformer(throwable)
+                                            .flatMapObservable { rxerror ->
+                                                Observable.error<T> {
+                                                    if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
+                                                }
+                                            }
                                 }
+                                .retryWhen(ObservableRetryDelay(retryConfigProvider))
                     }
-                    .retryWhen(ObservableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -46,8 +46,8 @@ class GlobalErrorTransformer<T> constructor(
                     .onErrorResumeNext {
                         globalOnErrorResumeTransformer(it)
                                 .flatMapCompletable { rxerror -> Completable.error(if (rxerror !== RxThrowable.EMPTY) rxerror else it) }
+                                .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -59,16 +59,16 @@ class GlobalErrorTransformer<T> constructor(
                                 .flatMapPublisher { rxerror ->
                                     if (rxerror !== RxThrowable.EMPTY) Flowable.error(rxerror) else Flowable.just(it)
                                 }
-                    }
-                    .onErrorResumeNext { throwable: Throwable ->
-                        globalOnErrorResumeTransformer(throwable)
-                                .flatMapPublisher { rxerror ->
-                                    Flowable.error<T> {
-                                        if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
-                                    }
+                                .onErrorResumeNext { throwable: Throwable ->
+                                    globalOnErrorResumeTransformer(throwable)
+                                            .flatMapPublisher { rxerror ->
+                                                Flowable.error<T> {
+                                                    if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
+                                                }
+                                            }
                                 }
+                                .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -80,16 +80,16 @@ class GlobalErrorTransformer<T> constructor(
                                 .flatMapMaybe { rxerror ->
                                     if (rxerror !== RxThrowable.EMPTY) Maybe.error(rxerror) else Maybe.just(it)
                                 }
-                    }
-                    .onErrorResumeNext { throwable: Throwable ->
-                        globalOnErrorResumeTransformer(throwable)
-                                .flatMapMaybe { rxerror ->
-                                    Maybe.error<T> {
-                                        if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
-                                    }
+                                .onErrorResumeNext { throwable: Throwable ->
+                                    globalOnErrorResumeTransformer(throwable)
+                                            .flatMapMaybe { rxerror ->
+                                                Maybe.error<T> {
+                                                    if (rxerror !== RxThrowable.EMPTY) rxerror else throwable
+                                                }
+                                            }
                                 }
+                                .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
@@ -101,12 +101,12 @@ class GlobalErrorTransformer<T> constructor(
                                 .flatMap { rxerror ->
                                     if (rxerror !== RxThrowable.EMPTY) Single.error(rxerror) else Single.just(it)
                                 }
+                                .onErrorResumeNext { throwable ->
+                                    globalOnErrorResumeTransformer(throwable)
+                                            .flatMap { rxerror -> Single.error<T>(if (rxerror !== RxThrowable.EMPTY) rxerror else throwable) }
+                                }
+                                .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     }
-                    .onErrorResumeNext {
-                        globalOnErrorResumeTransformer(it)
-                                .flatMap { rxerror -> Single.error<T>(if (rxerror !== RxThrowable.EMPTY) rxerror else it) }
-                    }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 }

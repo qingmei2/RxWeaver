@@ -21,7 +21,7 @@ class FlowableRetryDelay(
                     if (!retryCondition)
                         return@Function Flowable.error<Any>(throwable)
 
-                    if (++retryCount < maxRetries) {
+                    if (++retryCount <= maxRetries) {
                         Flowable.timer(delay.toLong(), TimeUnit.MILLISECONDS)
                     } else Flowable.error<Any>(throwable)
                 })

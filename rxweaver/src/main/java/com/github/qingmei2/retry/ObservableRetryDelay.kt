@@ -21,7 +21,7 @@ class ObservableRetryDelay(
                     if (!retryCondition)
                         return@Function Observable.error<Any>(throwable)
 
-                    if (++retryCount < maxRetries) {
+                    if (++retryCount <= maxRetries) {
                         Observable.timer(delay.toLong(), TimeUnit.MILLISECONDS)
                     } else Observable.error<Any>(throwable)
                 })
