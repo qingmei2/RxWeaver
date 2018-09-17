@@ -4,8 +4,8 @@ package com.github.qingmei2
 
 import android.support.v4.app.FragmentActivity
 import android.widget.Toast
-import com.github.qingmei2.core.RxThrowable
 import com.github.qingmei2.core.GlobalErrorTransformer
+import com.github.qingmei2.core.RxThrowable
 import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
 import com.github.qingmei2.retry.RetryConfig
@@ -36,7 +36,7 @@ object WeaverHelper {
             downStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
 
             // 通过onNext流中数据的状态进行操作
-            globalOnNextInterceptor = {
+            globalOnNextRetryInterceptor = {
                 when (it.statusCode) {
                     STATUS_UNAUTHORIZED -> {
                         Toast.makeText(context, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
@@ -57,7 +57,7 @@ object WeaverHelper {
             },
 
             // 通过onError中Throwable状态进行操作
-            globalOnErrorResumeTransformer = { error ->
+            globalOnErrorResumeRetryTransformer = { error ->
                 when (error) {
                     is ConnectException -> {
                         RxDialog.showErrorDialog(context, "ConnectException")
