@@ -1,8 +1,8 @@
 package com.github.qingmei2.core
 
 open class RxThrowable(
-        private val customStatusCode: Int,
-        private val customErrorMessage: String
+        val customStatusCode: Int,
+        val customErrorMessage: String
 ) : Throwable() {
 
     companion object {

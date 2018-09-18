@@ -9,6 +9,7 @@ import com.github.qingmei2.core.RxThrowable
 import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
 import com.github.qingmei2.retry.RetryConfig
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import org.json.JSONException
@@ -39,45 +40,57 @@ object WeaverHelper {
             globalOnNextRetryInterceptor = {
                 when (it.statusCode) {
                     STATUS_UNAUTHORIZED -> {
-                        Toast.makeText(context, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
-                        NavigatorFragment()
-                                .startLoginForResult(context)
-                                .flatMap { loginSuccess ->
-                                    if (loginSuccess) {
-                                        Toast.makeText(context, "登陆成功！3秒延迟后重试！", Toast.LENGTH_SHORT).show()
-                                        Single.just(ReLoginSuccessAndRetryException(it))
-                                    } else {
-                                        Toast.makeText(context, "登陆失败！", Toast.LENGTH_SHORT).show()
-                                        Single.just(ReLoginFailedException(it))
-                                    }
-                                }
+                        Single.just(TokenExpiredException(it))
                     }
                     else -> Single.just(RxThrowable.EMPTY)
                 }
             },
 
             // 通过onError中Throwable状态进行操作
-            globalOnErrorResumeRetryTransformer = { error ->
+            globalOnErrorResume = { error ->
                 when (error) {
                     is ConnectException -> {
+                        Observable.error<T>(ConnectFailedAlertDialogException())
+                    }
+                    else -> Observable.error<T>(error)
+                }
+            },
+
+            retryErrorTransformer = { error ->
+                when (error) {
+                    is TokenExpiredException -> {
+                        Toast.makeText(context, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
+                        NavigatorFragment()
+                                .startLoginForResult(context)
+                                .flatMap { loginSuccess ->
+                                    if (loginSuccess) {
+                                        Toast.makeText(context, "登陆成功！3秒延迟后重试！", Toast.LENGTH_SHORT).show()
+                                        Single.just(true)
+                                    } else {
+                                        Toast.makeText(context, "登陆失败！", Toast.LENGTH_SHORT).show()
+                                        Single.just(false)
+                                    }
+                                }
+                    }
+                    is ConnectFailedAlertDialogException -> {
                         RxDialog.showErrorDialog(context, "ConnectException")
                                 .flatMap {
                                     if (it)   // 用户选择重试按钮,发送重试事件
-                                        Single.just(ConnectFailedAlertDialogException())
+                                        Single.just(true)
                                     else
-                                        Single.just(RxThrowable.EMPTY)
+                                        Single.just(false)
 
                                 }
                     }
-                    else -> Single.just(RxThrowable.EMPTY)
+                    else -> Single.just(false)
                 }
             },
 
             retryConfigProvider = { error ->
                 when (error) {
-                    is ConnectFailedAlertDialogException -> RetryConfig(retryCondition = true)
-                    is ReLoginSuccessAndRetryException -> RetryConfig(delay = 3000, retryCondition = true)
-                    else -> RetryConfig(retryCondition = false) // 其它异常都不重试,比如ReLoginFailedException
+                    is ConnectFailedAlertDialogException -> RetryConfig(needTransform = true)
+                    is TokenExpiredException -> RetryConfig(delay = 3000, needTransform = true)
+                    else -> RetryConfig(needTransform = false) // 其它异常都不重试
                 }
             },
 

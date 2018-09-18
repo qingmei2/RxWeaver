@@ -1,29 +1,41 @@
 package com.github.qingmei2.retry
 
+import com.github.qingmei2.core.RxThrowable
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
+import io.reactivex.Single
 import io.reactivex.annotations.NonNull
 import io.reactivex.functions.Function
 import java.util.concurrent.TimeUnit
 
 class ObservableRetryDelay(
-        val provider: (Throwable) -> RetryConfig
+        val retryErrorTransformer: (RxThrowable) -> Single<Boolean>,
+        val retryConfigProvider: (RxThrowable) -> RetryConfig
 ) : Function<Observable<Throwable>, ObservableSource<*>> {
 
     private var retryCount: Int = 0
 
     @Throws(Exception::class)
-    override fun apply(@NonNull throwableObservable: Observable<Throwable>): ObservableSource<*> {
-        return throwableObservable
-                .flatMap(Function<Throwable, ObservableSource<*>> { throwable ->
-                    val (maxRetries, delay, retryCondition) = provider(throwable)
+    override fun apply(@NonNull throwableObs: Observable<Throwable>): ObservableSource<*> {
+        return throwableObs
+                .flatMap(Function<Throwable, ObservableSource<*>> { error ->
+                    if (error !is RxThrowable)
+                        return@Function Observable.error<Any>(error)
+
+                    val (maxRetries, delay, retryCondition) = retryConfigProvider(error)
 
                     if (!retryCondition)
-                        return@Function Observable.error<Any>(throwable)
+                        return@Function Observable.error<Any>(error)
 
                     if (++retryCount <= maxRetries) {
-                        Observable.timer(delay.toLong(), TimeUnit.MILLISECONDS)
-                    } else Observable.error<Any>(throwable)
+                        retryErrorTransformer(error)
+                                .flatMapObservable { retry ->
+                                    if (retry)
+                                        Observable.timer(delay.toLong(), TimeUnit.MILLISECONDS)
+                                    else
+                                        Observable.error<Any>(error)
+                                }
+                    } else Observable.error<Any>(error)
                 })
     }
 }
