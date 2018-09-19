@@ -1,6 +1,5 @@
 package com.github.qingmei2.retry
 
-import com.github.qingmei2.core.RxThrowable
 import io.reactivex.Single
 
 private const val DEFAULT_RETRY_TIMES = 1
