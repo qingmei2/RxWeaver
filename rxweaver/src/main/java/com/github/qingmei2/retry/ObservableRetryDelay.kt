@@ -3,13 +3,11 @@ package com.github.qingmei2.retry
 import com.github.qingmei2.core.RxThrowable
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
-import io.reactivex.Single
 import io.reactivex.annotations.NonNull
 import io.reactivex.functions.Function
 import java.util.concurrent.TimeUnit
 
 class ObservableRetryDelay(
-        val retryErrorTransformer: (RxThrowable) -> Single<Boolean>,
         val retryConfigProvider: (RxThrowable) -> RetryConfig
 ) : Function<Observable<Throwable>, ObservableSource<*>> {
 
@@ -24,11 +22,8 @@ class ObservableRetryDelay(
 
                     val (maxRetries, delay, retryCondition) = retryConfigProvider(error)
 
-                    if (!retryCondition)
-                        return@Function Observable.error<Any>(error)
-
                     if (++retryCount <= maxRetries) {
-                        retryErrorTransformer(error)
+                        retryCondition()
                                 .flatMapObservable { retry ->
                                     if (retry)
                                         Observable.timer(delay.toLong(), TimeUnit.MILLISECONDS)
