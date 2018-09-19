@@ -9,7 +9,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 class GlobalErrorTransformer<T> constructor(
         private val globalOnNextRetryInterceptor: (T) -> Observable<T> = { Observable.just(it) },
         private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
-        private val retryErrorTransformer: (RxThrowable) -> Single<Boolean> = { Single.just(false) },
         private val retryConfigProvider: (RxThrowable) -> RetryConfig = { RetryConfig() },
         private val globalDoOnErrorConsumer: (Throwable) -> Unit = { },
         private val upStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
@@ -22,30 +21,29 @@ class GlobalErrorTransformer<T> constructor(
 
     override fun apply(upstream: Observable<T>): Observable<T> =
             upstream
-                    .observeOn(upStreamSchedulerProvider())
                     .flatMap {
                         globalOnNextRetryInterceptor(it)
                     }
                     .onErrorResumeNext { throwable: Throwable ->
                         globalOnErrorResume(throwable)
                     }
-                    .retryWhen(ObservableRetryDelay(retryErrorTransformer, retryConfigProvider))
+                    .observeOn(upStreamSchedulerProvider())
+                    .retryWhen(ObservableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
     override fun apply(upstream: Completable): Completable =
             upstream
-                    .observeOn(upStreamSchedulerProvider())
                     .onErrorResumeNext {
                         globalOnErrorResume(it).ignoreElements()
                     }
-                    .retryWhen(FlowableRetryDelay(retryErrorTransformer, retryConfigProvider))
+                    .observeOn(upStreamSchedulerProvider())
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
     override fun apply(upstream: Flowable<T>): Flowable<T> =
             upstream
-                    .observeOn(upStreamSchedulerProvider())
                     .flatMap {
                         globalOnNextRetryInterceptor(it)
                                 .toFlowable(BackpressureStrategy.BUFFER)
@@ -54,13 +52,13 @@ class GlobalErrorTransformer<T> constructor(
                         globalOnErrorResume(throwable)
                                 .toFlowable(BackpressureStrategy.BUFFER)
                     }
-                    .retryWhen(FlowableRetryDelay(retryErrorTransformer, retryConfigProvider))
+                    .observeOn(upStreamSchedulerProvider())
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
     override fun apply(upstream: Maybe<T>): Maybe<T> =
             upstream
-                    .observeOn(upStreamSchedulerProvider())
                     .flatMap {
                         globalOnNextRetryInterceptor(it)
                                 .firstElement()
@@ -69,13 +67,13 @@ class GlobalErrorTransformer<T> constructor(
                         globalOnErrorResume(throwable)
                                 .firstElement()
                     }
-                    .retryWhen(FlowableRetryDelay(retryErrorTransformer, retryConfigProvider))
+                    .observeOn(upStreamSchedulerProvider())
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 
     override fun apply(upstream: Single<T>): Single<T> =
             upstream
-                    .observeOn(upStreamSchedulerProvider())
                     .flatMap {
                         globalOnNextRetryInterceptor(it)
                                 .firstOrError()
@@ -84,7 +82,8 @@ class GlobalErrorTransformer<T> constructor(
                         globalOnErrorResume(throwable)
                                 .firstOrError()
                     }
-                    .retryWhen(FlowableRetryDelay(retryErrorTransformer, retryConfigProvider))
+                    .observeOn(upStreamSchedulerProvider())
+                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
                     .doOnError(globalDoOnErrorConsumer)
                     .observeOn(downStreamSchedulerProvider())
 }
