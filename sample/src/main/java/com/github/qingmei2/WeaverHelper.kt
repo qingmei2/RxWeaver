@@ -9,7 +9,6 @@ import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import org.json.JSONException
 import java.net.ConnectException
@@ -29,7 +28,7 @@ object WeaverHelper {
     private const val SERVICE_UNAVAILABLE = 503
     private const val GATEWAY_TIMEOUT = 504
 
-    fun <T : BaseEntity> handleGlobalError(context: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
+    fun <T : BaseEntity> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             upStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
 
@@ -39,7 +38,7 @@ object WeaverHelper {
             globalOnNextRetryInterceptor = {
                 when (it.statusCode) {
                     STATUS_UNAUTHORIZED -> {
-                        Observable.error(TokenExpiredException(it))
+                        Observable.error(TokenExpiredException())
                     }
                     else -> Observable.just(it)
                 }
@@ -58,26 +57,17 @@ object WeaverHelper {
             retryConfigProvider = { error ->
                 when (error) {
                     is ConnectFailedAlertDialogException -> RetryConfig {
-                        RxDialog.showErrorDialog(context, "ConnectException")
-                                .flatMap {
-                                    if (it)
-                                        Single.just(true)   // 重试
-                                    else
-                                        Single.just(false)  // 不重试
-
-                                }
+                        RxDialog.showErrorDialog(activity, "ConnectException")
                     }
                     is TokenExpiredException -> RetryConfig(delay = 3000) {
-                        Toast.makeText(context, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
                         NavigatorFragment()
-                                .startLoginForResult(context)
-                                .flatMap { loginSuccess ->
+                                .startLoginForResult(activity)
+                                .doOnSuccess { loginSuccess ->
                                     if (loginSuccess) {
-                                        Toast.makeText(context, "登陆成功,3s延迟后重试！", Toast.LENGTH_SHORT).show()
-                                        Single.just(true)
+                                        Toast.makeText(activity, "登陆成功,3s延迟后重试！", Toast.LENGTH_SHORT).show()
                                     } else {
-                                        Toast.makeText(context, "登陆失败,继续执行下游逻辑", Toast.LENGTH_SHORT).show()
-                                        Single.just(false)
+                                        Toast.makeText(activity, "登陆失败,error继续向下游传递", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                     }
@@ -88,7 +78,7 @@ object WeaverHelper {
             globalDoOnErrorConsumer = { error ->
                 when (error) {
                     is JSONException -> {
-                        Toast.makeText(context, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()
                     }
                     else -> {
 

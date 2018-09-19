@@ -1,6 +1,5 @@
 package com.github.qingmei2.retry
 
-import com.github.qingmei2.core.RxThrowable
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.annotations.NonNull
@@ -8,18 +7,14 @@ import io.reactivex.functions.Function
 import java.util.concurrent.TimeUnit
 
 class ObservableRetryDelay(
-        val retryConfigProvider: (RxThrowable) -> RetryConfig
+        val retryConfigProvider: (Throwable) -> RetryConfig
 ) : Function<Observable<Throwable>, ObservableSource<*>> {
 
     private var retryCount: Int = 0
 
-    @Throws(Exception::class)
-    override fun apply(@NonNull throwableObs: Observable<Throwable>): ObservableSource<*> {
+    override fun apply(throwableObs: Observable<Throwable>): ObservableSource<*> {
         return throwableObs
-                .flatMap(Function<Throwable, ObservableSource<*>> { error ->
-                    if (error !is RxThrowable)
-                        return@Function Observable.error<Any>(error)
-
+                .flatMap { error ->
                     val (maxRetries, delay, retryCondition) = retryConfigProvider(error)
 
                     if (++retryCount <= maxRetries) {
@@ -31,6 +26,6 @@ class ObservableRetryDelay(
                                         Observable.error<Any>(error)
                                 }
                     } else Observable.error<Any>(error)
-                })
+                }
     }
 }

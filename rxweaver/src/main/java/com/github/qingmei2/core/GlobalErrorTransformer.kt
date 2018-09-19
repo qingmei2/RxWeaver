@@ -9,7 +9,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 class GlobalErrorTransformer<T> constructor(
         private val globalOnNextRetryInterceptor: (T) -> Observable<T> = { Observable.just(it) },
         private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
-        private val retryConfigProvider: (RxThrowable) -> RetryConfig = { RetryConfig() },
+        private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig() },
         private val globalDoOnErrorConsumer: (Throwable) -> Unit = { },
         private val upStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
         private val downStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() }

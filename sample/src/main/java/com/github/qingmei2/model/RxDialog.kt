@@ -1,7 +1,6 @@
 package com.github.qingmei2.model
 
 import android.content.Context
-import android.content.DialogInterface
 import android.support.v7.app.AlertDialog
 import io.reactivex.Single
 
@@ -18,16 +17,8 @@ object RxDialog {
                     .setTitle("错误")
                     .setMessage("您收到了一个异常:$message,是否重试本次请求？")
                     .setCancelable(false)
-                    .setPositiveButton("重试", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            emitter.onSuccess(true)
-                        }
-                    })
-                    .setNegativeButton("取消", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            emitter.onSuccess(false)
-                        }
-                    })
+                    .setPositiveButton("重试") { _, _ -> emitter.onSuccess(true) }
+                    .setNegativeButton("取消") { _, _ -> emitter.onSuccess(false) }
                     .show()
         }
     }

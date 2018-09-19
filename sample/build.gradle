@@ -29,7 +29,7 @@ android {
     }
 }
 
-def testJcenter = true
+def testJcenter = false
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
