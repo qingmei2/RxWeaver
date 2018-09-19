@@ -8,8 +8,8 @@
 
 ```groovy
 
-implementation 'com.github.qingmei2.rxweaver:rxweaver:0.2.1'        // kotlin版本
-implementation 'com.github.qingmei2.rxweaver:rxweaver_java:0.2.1'   // Java版本
+implementation 'com.github.qingmei2.rxweaver:rxweaver:0.2.1'        // Writen by Kotlin
+implementation 'com.github.qingmei2.rxweaver:rxweaver_java:0.2.1'   // Writen by Java
 
 ```
 
