@@ -2,6 +2,9 @@ package com.github.qingmei2
 
 import com.github.qingmei2.core.RxThrowable
 
-class ConnectFailedAlertDialogException : RxThrowable(-1, "Connect Failed")
+open class CustomThrowable(val statusCode: Int,
+                           val statusMessage: String) : RxThrowable()
 
-class TokenExpiredException(entity: BaseEntity) : RxThrowable(entity.statusCode, entity.message)
+class ConnectFailedAlertDialogException : CustomThrowable(-1, "Connect Failed")
+
+class TokenExpiredException(entity: BaseEntity) : CustomThrowable(entity.statusCode, entity.message)
