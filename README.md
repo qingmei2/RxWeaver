@@ -1,14 +1,14 @@
 # RxWeaver
 
-一个轻量且灵活的RxJava2全局Error处理工具.
-
 <a href='https://bintray.com/mq2553299/maven/rxweaver/_latestVersion'><img src='https://api.bintray.com/packages/mq2553299/maven/rxweaver/images/download.svg'></a>
+
+一个轻量且灵活的RxJava2全局Error处理工具.
 
 ## Usage
 
 ```groovy
-implementation 'com.github.qingmei2.rxweaver:rxweaver:0.2.0'        // kotlin版本
-implementation 'com.github.qingmei2.rxweaver:rxweaver_java:0.2.0'   // Java版本
+implementation 'com.github.qingmei2.rxweaver:rxweaver:0.2.1'        // kotlin版本
+implementation 'com.github.qingmei2.rxweaver:rxweaver_java:0.2.1'   // Java版本
 ```
 
 ## License
