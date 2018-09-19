@@ -11,9 +11,12 @@ import io.reactivex.functions.Function;
 public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publisher<?>> {
 
     private Function<Throwable, RetryConfig> provider;
+
     private int retryCount;
 
     public FlowableRetryDelay(Function<Throwable, RetryConfig> provider) {
+        if (provider == null)
+            throw new NullPointerException("The parameter provider can't be null!");
         this.provider = provider;
     }
 
@@ -22,14 +25,23 @@ public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publish
         return throwableFlowable
                 .flatMap(new Function<Throwable, Publisher<?>>() {
                     @Override
-                    public Publisher<?> apply(@NonNull Throwable throwable) throws Exception {
+                    public Publisher<?> apply(Throwable throwable) throws Exception {
+
                         RetryConfig retryConfig = provider.apply(throwable);
 
-                        if (retryConfig.isRetryCondition()) {
-                            return Flowable.error(throwable);
-                        }
-                        if (++retryCount < retryConfig.getMaxRetries()) {
-                            return Flowable.timer(retryConfig.getDelay(), TimeUnit.MILLISECONDS);
+                        if (++retryCount <= retryConfig.getMaxRetries()) {
+                            return retryConfig
+                                    .getRetryCondition()
+                                    .call()
+                                    .flatMapPublisher(new Function<Boolean, Publisher<?>>() {
+                                        @Override
+                                        public Publisher<?> apply(Boolean retry) throws Exception {
+                                            if (retry)
+                                                return Flowable.timer(retryConfig.getDelay(), TimeUnit.MILLISECONDS);
+                                            else
+                                                return Flowable.error(throwable);
+                                        }
+                                    });
                         }
                         return Flowable.error(throwable);
                     }

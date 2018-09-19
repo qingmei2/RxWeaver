@@ -1,1 +1,1 @@
-include ':app', ':rxweaver'
+include ':sample', ':rxweaver'
