@@ -1,6 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.novoda.bintray-release'
 
 android {
@@ -34,8 +32,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation libs.kotlin_stdlib
-
     implementation libs.rxjava
     implementation libs.rxandroid
 
@@ -48,7 +44,7 @@ repositories {
 publish {
     userOrg = 'mq2553299'
     groupId = 'com.github.qingmei2.rxweaver'
-    artifactId = 'rxweaver'
+    artifactId = 'rxweaver_java'
     publishVersion = build_version.versionName
     desc = 'A lightweight and flexible error handler tools for RxJava2.'
     website = 'https://github.com/qingmei2/RxWeaver'
