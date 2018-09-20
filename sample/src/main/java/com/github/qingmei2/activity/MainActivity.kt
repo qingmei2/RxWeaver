@@ -3,8 +3,9 @@ package com.github.qingmei2.activity
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import com.github.qingmei2.BaseEntity
 import com.github.qingmei2.UserInfo
-import com.github.qingmei2.WeaverHelper
+import com.github.qingmei2.RxUtils
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
@@ -47,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun fetchError(observable: Observable<UserInfo>) {
         observable
-                .compose(WeaverHelper.handleGlobalError<UserInfo>(this))
+                .compose(RxUtils.handleGlobalError<UserInfo>(this))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(

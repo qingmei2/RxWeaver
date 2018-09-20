@@ -13,7 +13,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import org.json.JSONException
 import java.net.ConnectException
 
-object WeaverHelper {
+object RxUtils {
 
     /**
      * Status code
@@ -28,7 +28,7 @@ object WeaverHelper {
     private const val SERVICE_UNAVAILABLE = 503
     private const val GATEWAY_TIMEOUT = 504
 
-    fun <T : BaseEntity> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
+    fun <T: BaseEntity> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             upStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
 
