@@ -50,12 +50,14 @@ class GlobalErrorTransformer<T> constructor(
 
 配置一个函数，保证能够返回`GlobalErrorTransformer`的实例：
 
+```kotlin
 object RxUtils {
 
   fun <T> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T>{
       return .....
   }
 }
+```
 
 [点击这里](https://github.com/qingmei2/RxWeaver/blob/kotlin/sample/src/main/java/com/github/qingmei2/RxUtils.kt)查看sample中的配置方式示例。
 
@@ -109,7 +111,7 @@ private fun requestHttp(observable: Observable<UserInfo>) {
 
 **高度抽象** 意味着学习曲线的陡峭性，我已经被`RxJava`所征服，因此我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对`RxJava`的理解，这就是值得的。
 
-我非常喜欢`RxWeaver`,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，`RxWeaver`的本质目的是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码*。
+我非常喜欢`RxWeaver`,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，`RxWeaver`的本质目的是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
 
 ## License
 
