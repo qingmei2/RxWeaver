@@ -20,7 +20,7 @@ RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **
 * 3.**高扩展性**：开发者可以通过接口实现任意复杂的需求实现，详情请参考下文;
 * 4.**灵活**：不破坏既有的业务代码，而是在原本的流中 **插入** 或 **删除** 一行代码——它是 **可插拔的**。
 
-### How to use it?
+## Usage
 
 ### 1.添加依赖
 
@@ -81,37 +81,113 @@ private fun requestHttp(observable: Observable<UserInfo>) {
 
 ### 1.全局异常配置，弹出toast：
 
-![](https://github.com/qingmei2/RxWeaver/blob/kotlin/screenshots/1.gif)
+<div align:left;display:inline;> <img width="200" height="360" src="https://github.com/qingmei2/RxWeaver/blob/kotlin/screenshots/1.gif"/> </div>
+
 
 ### 2.全局异常配置，弹出Dialog并是否重试：
 
-![](https://github.com/qingmei2/RxWeaver/blob/kotlin/screenshots/2.gif)
+<div align:left;display:inline;> <img width="200" height="360" src="https://github.com/qingmei2/RxWeaver/blob/kotlin/screenshots/2.gif"/> </div>
+
 
 ### 3.全局异常配置，token异常，重新登录后返回界面重试：
 
-![](https://github.com/qingmei2/RxWeaver/blob/kotlin/screenshots/3.gif)
+<div align:left;display:inline;> <img width="200" height="360" src="https://github.com/qingmei2/RxWeaver/blob/kotlin/screenshots/3.gif"/> </div>
 
-### 4.更多私有化定制的需求....
+### 4.更多
 
-## 原理
+当然也能够实现更多私有化定制的需求....
+
+## 原理&如何配置GlobalErrorTransformer
 
 **RxWeaver** 是一个轻量且灵活的RxJava2 **全局Error处理中间件** ，这意味着，它并不是一个非常重，设计非常复杂的框架。**Weaver** 翻译过来叫做 **编织鸟**， 可以让开发者对error处理逻辑 **组织**，以达到实现全局Error的把控。
 
-它的核心原理是依赖`compose()`操作符——这是RxJava给我们提供的可以面向 **响应式数据类型** (Observable/Flowable/Single等等)进行 **AOP** 的接口, 可以对响应式数据类型 **加工** 、**修饰** ，甚至 **替换**。
+它的核心原理是依赖 `compose()` 操作符——这是RxJava给我们提供的可以面向 **响应式数据类型** (Observable/Flowable/Single等等)进行 **AOP** 的接口, 可以对响应式数据类型 **加工** 、**修饰** ，甚至 **替换**。
 
-它的原理也是非常 **简单** 的，只要熟悉了`onErrorResumeNext`、`retryWhen`、`doOnError`这几个关键的操作符，你就可以马上上手对应的配置；它也是非常 **轻量** 的，轻到甚至可以直接把源代码复制粘贴到自己的项目中，通过jcenter依赖，它的体积也只有3kb。
+它的原理也是非常 **简单** 的，只要熟悉了 `onErrorResumeNext` 、 `retryWhen` 、 `doOnError` 这几个关键的操作符，你就可以马上上手对应的配置；它也是非常 **轻量** 的，轻到甚至可以直接把源代码复制粘贴到自己的项目中，通过jcenter依赖，它的体积也只有3kb。
+
+### 1. globalOnNextInterceptor: (T) -> Observable<T>
+
+**将正常数据转换为一个异常** 是很常见的需求，有时流中的数据可能会是一个错误的状态（比如，token失效）。
+
+`globalOnNextInterceptor` 函数内部直接使用 `flatMap()` 操作符将数据进行了转换，因此你可以将一个错误的状态转换为 `Observable.error()` 向下传递：
+
+```kotlin
+globalOnNextInterceptor = {
+    when (it.statusCode) {
+        STATUS_UNAUTHORIZED -> {        // token 失效，将流转换为error，交由下游处理
+            Observable.error(TokenExpiredException())
+        }
+        else -> Observable.just(it)     // 其他情况，数据向下游正常传递
+    }
+}
+```
+
+### 2. globalOnErrorResume: (Throwable) -> Observable<T>
+
+和 `globalOnNextInterceptor` 函数很相似，更常见的情况是通过解析不同的 `Throwable` ，然后根据实际业务做出对应的处理：
+
+```kotlin
+globalOnErrorResume = { error ->
+    when (error) {
+        is ConnectException -> {        // 连接错误，转换为特殊的异常（标记作用），交给下游
+            Observable.error<T>(ConnectFailedAlertDialogException())
+        }
+        else -> Observable.error<T>(error)  // 其他情况，异常向下游正常传递
+    }
+}
+```
+
+`globalOnErrorResume` 函数内部是通过 `onErrorResumeNext()` 操作符实现的。
+
+### 3.retryConfigProvider: (Throwable) -> RetryConfig
+
+当需要做出是否要重试的决定时，需要根据异常的类型进行判断，并做出对应的行为：
+
+```kotlin
+retryConfigProvider = { error ->
+    when (error) {
+        is ConnectFailedAlertDialogException -> RetryConfig {
+            // .....
+        }
+        is TokenExpiredException -> RetryConfig(delay = 3000) {
+            // .....
+        }
+        else -> RetryConfig() // 其它异常都不重试
+    }
+}
+```
+
+`retryConfigProvider` 函数内部是通过 `retryWhen()` 操作符实现的。
+
+
+### 4.globalDoOnErrorConsumer: (Throwable) -> Unit
+
+`globalDoOnErrorConsumer` 函数并不会拦截或消费上游发射的异常，它的内部实际上就是通过 `doOnError()` 操作符的调用，做一些 **顺势而为** 的处理,比如toast，或者其它。
+
+```kotlin
+globalDoOnErrorConsumer = { error ->
+    when (error) {
+        is JSONException -> {
+            Toast.makeText(activity, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()
+        }
+        else -> {
+
+        }
+    }
+}
+```
 
 ## 关于RxJava
 
-在不断深入学习理解`RxJava`的过程中，我沉浸`RxJava`不可自拔，1年多前，如果问我`RxJava`能够实现什么，我可能会侃侃而谈；但是如今，我反而回答不了你，或者会尝试反问，你觉得`RxJava`实现不了什么？
+在不断深入学习理解 `RxJava` 的过程中，我沉浸 `RxJava` 不可自拔，1年多前，如果问我 `RxJava` 能够实现什么，我可能会侃侃而谈；但是如今，我反而回答不了你，或者会尝试反问，你觉得 `RxJava` 实现不了什么？
 
 它太强大了！正如[这篇文章](https://juejin.im/post/5b8f5f0ee51d450ea52f6a37)所描述的：
 
 > RxJava 的操作符是我们平时处理业务逻辑时常用方法的 **高度抽象**.
 
-**高度抽象** 意味着学习曲线的陡峭性，我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对`RxJava`的理解，这就是值得的。
+**高度抽象** 意味着学习曲线的陡峭性，我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对 `RxJava` 的理解，这就是值得的。
 
-我非常喜欢`RxWeaver`的设计,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，它创建 **最初的目的** 就是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
+我非常喜欢 `RxWeaver` 的设计,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，它创建 **最初的目的** 就是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
 
 ## License
 
