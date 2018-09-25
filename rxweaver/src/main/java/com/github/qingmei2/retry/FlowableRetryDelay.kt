@@ -1,7 +1,6 @@
 package com.github.qingmei2.retry
 
 import io.reactivex.Flowable
-import io.reactivex.annotations.NonNull
 import io.reactivex.functions.Function
 import org.reactivestreams.Publisher
 import java.util.concurrent.TimeUnit

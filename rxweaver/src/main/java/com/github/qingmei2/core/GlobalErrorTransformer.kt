@@ -7,7 +7,7 @@ import io.reactivex.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 
 class GlobalErrorTransformer<T> constructor(
-        private val globalOnNextRetryInterceptor: (T) -> Observable<T> = { Observable.just(it) },
+        private val globalOnNextInterceptor: (T) -> Observable<T> = { Observable.just(it) },
         private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
         private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig() },
         private val globalDoOnErrorConsumer: (Throwable) -> Unit = { },
@@ -22,7 +22,7 @@ class GlobalErrorTransformer<T> constructor(
     override fun apply(upstream: Observable<T>): Observable<T> =
             upstream
                     .flatMap {
-                        globalOnNextRetryInterceptor(it)
+                        globalOnNextInterceptor(it)
                     }
                     .onErrorResumeNext { throwable: Throwable ->
                         globalOnErrorResume(throwable)
@@ -45,7 +45,7 @@ class GlobalErrorTransformer<T> constructor(
     override fun apply(upstream: Flowable<T>): Flowable<T> =
             upstream
                     .flatMap {
-                        globalOnNextRetryInterceptor(it)
+                        globalOnNextInterceptor(it)
                                 .toFlowable(BackpressureStrategy.BUFFER)
                     }
                     .onErrorResumeNext { throwable: Throwable ->
@@ -60,7 +60,7 @@ class GlobalErrorTransformer<T> constructor(
     override fun apply(upstream: Maybe<T>): Maybe<T> =
             upstream
                     .flatMap {
-                        globalOnNextRetryInterceptor(it)
+                        globalOnNextInterceptor(it)
                                 .firstElement()
                     }
                     .onErrorResumeNext { throwable: Throwable ->
@@ -75,7 +75,7 @@ class GlobalErrorTransformer<T> constructor(
     override fun apply(upstream: Single<T>): Single<T> =
             upstream
                     .flatMap {
-                        globalOnNextRetryInterceptor(it)
+                        globalOnNextInterceptor(it)
                                 .firstOrError()
                     }
                     .onErrorResumeNext { throwable ->

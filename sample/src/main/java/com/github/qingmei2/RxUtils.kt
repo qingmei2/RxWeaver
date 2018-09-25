@@ -35,7 +35,7 @@ object RxUtils {
             downStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
 
             // 通过onNext流中数据的状态进行操作
-            globalOnNextRetryInterceptor = {
+            globalOnNextInterceptor = {
                 when (it.statusCode) {
                     STATUS_UNAUTHORIZED -> {
                         Observable.error(TokenExpiredException())

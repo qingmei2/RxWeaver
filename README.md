@@ -8,7 +8,7 @@
 
 * 1.开发者无法在`subscribe()`中使用lambda，灵活性降低， 这也是为什么强调尽量考虑 **组合** 的设计方式而不直接采用 **继承** 的原因。
 * 2.如果开发者想要移除（或者重构）相关代码，就必须改动既有的业务逻辑，比如每一个网络请求的`subscribe()`中的代码，这种逻辑改动是产品级的。
-* 3.`onError()`中对error进行处理，这意味着打破了`Observable`的链式调用(这种代码真的很不Reactive和Functional！)，开发者不得不在回调中`subscribe()`一个新的`Observable`—— `RxJava`版的 **Callback Hell（回调地狱）** 产生了。
+* 3.`onError()`中对error进行处理，这意味着打破了`Observable`的链式调用。
 
 RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **AOP** 的思想，在既有的代码上  **插入** 或 **删除**  一行代码，即可实现全局Error处理的需求——而不是破坏`RxJava`所表达的 **响应式编程** 和 **函数式编程** 的思想。
 
@@ -101,7 +101,7 @@ private fun requestHttp(observable: Observable<UserInfo>) {
 
 它的原理也是非常 **简单** 的，只要熟悉了`onErrorResumeNext`、`retryWhen`、`doOnError`这几个关键的操作符，你就可以马上上手对应的配置；它也是非常 **轻量** 的，轻到甚至可以直接把源代码复制粘贴到自己的项目中，通过jcenter依赖，它的体积也只有3kb。
 
-## 关于RxWeaver
+## 关于RxJava
 
 在不断深入学习理解`RxJava`的过程中，我沉浸`RxJava`不可自拔，1年多前，如果问我`RxJava`能够实现什么，我可能会侃侃而谈；但是如今，我反而回答不了你，或者会尝试反问，你觉得`RxJava`实现不了什么？
 
@@ -109,9 +109,9 @@ private fun requestHttp(observable: Observable<UserInfo>) {
 
 > RxJava 的操作符是我们平时处理业务逻辑时常用方法的 **高度抽象**.
 
-**高度抽象** 意味着学习曲线的陡峭性，我已经被`RxJava`所征服，因此我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对`RxJava`的理解，这就是值得的。
+**高度抽象** 意味着学习曲线的陡峭性，我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对`RxJava`的理解，这就是值得的。
 
-我非常喜欢`RxWeaver`,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，`RxWeaver`的本质目的是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
+我非常喜欢`RxWeaver`的设计,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，它创建 **最初的目的** 就是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
 
 ## License
 
