@@ -189,6 +189,12 @@ globalDoOnErrorConsumer = { error ->
 
 我非常喜欢 `RxWeaver` 的设计,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，它创建 **最初的目的** 就是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
 
+## 我的其他RxJava项目
+
+* [RxImagePicker: Support for RxJava2. Flexible picture selector of Android, provides the support for theme of Zhihu and WeChat.](https://github.com/qingmei2/RxImagePicker)
+
+* [MVVM-Rhine: The MVVM using RxJava and Android databinding.](https://github.com/qingmei2/MVVM-Rhine)
+
 ## License
 
     The RxWeaver: MIT License
