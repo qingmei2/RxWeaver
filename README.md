@@ -1,4 +1,4 @@
-# RxWeaver
+# RxWeaver_Java
 
 <a href='https://bintray.com/mq2553299/maven/rxweaver/_latestVersion'><img src='https://api.bintray.com/packages/mq2553299/maven/rxweaver/images/download.svg'></a>
 
@@ -26,52 +26,62 @@ RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **
 
 ```groovy
 implementation 'com.github.qingmei2.rxweaver:rxweaver:0.2.1'        // Writen by Kotlin
+
 implementation 'com.github.qingmei2.rxweaver:rxweaver_java:0.2.1'   // Writen by Java
 ```
 
-RxWeaver默认的开发分支为`kotlin`,`kotlin`版本的 源码和示例代码请参考 **[这里](https://github.com/qingmei2/RxWeaver)** 。
+RxWeaver默认的开发分支为 `kotlin` , `kotlin` 版本的 源码和示例代码请参考 **[这里](https://github.com/qingmei2/RxWeaver)** 。
 
 ### 2.配置GlobalErrorTransformer
 
-[GlobalErrorTransformer](https://github.com/qingmei2/RxWeaver/blob/kotlin/rxweaver/src/main/java/com/github/qingmei2/core/GlobalErrorTransformer.kt) 是一个是`Transformer<T, R>`的实现类，负责把全局的error处理逻辑，分发给不同的 **响应式类型**(Observable、Flowable、Single、Maybe、Completable)：
+[GlobalErrorTransformer](https://github.com/qingmei2/RxWeaver/blob/java/rxweaver/src/main/java/com/github/qingmei2/core/GlobalErrorTransformer.java) 是一个是`Transformer<T, R>`的实现类，负责把全局的error处理逻辑，分发给不同的 **响应式类型**(Observable、Flowable、Single、Maybe、Completable)：
 
-```Kotlin
-class GlobalErrorTransformer<T> constructor(
-        private val globalOnNextRetryInterceptor: (T) -> Observable<T> = { Observable.just(it) },
-        private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
-        private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig() },
-        private val globalDoOnErrorConsumer: (Throwable) -> Unit = { },
-        private val upStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
-        private val downStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() }
-) : ObservableTransformer<T, T>, FlowableTransformer<T, T>, SingleTransformer<T, T>,  MaybeTransformer<T, T>, CompletableTransformer {
-      // ...
+```Java
+public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
+        FlowableTransformer<T, T>, SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer {
+
+        public GlobalErrorTransformer(Suppiler<Scheduler> upStreamSchedulerProvider,
+                                          Suppiler<Scheduler> downStreamSchedlerProvider,
+                                          Function<T, Observable<T>> globalOnNextRetryInterceptor,
+                                          Function<Throwable, Observable<T>> globalOnErrorResume,
+                                          Function<Throwable, RetryConfig> retryConfigProvider,
+                                          Consumer<Throwable> globalDoOnErrorConsumer) {
+                this.upStreamSchedulerProvider = upStreamSchedulerProvider;
+                this.downStreamSchedlerProvider = downStreamSchedlerProvider;
+                this.globalOnNextRetryInterceptor = globalOnNextRetryInterceptor;
+                this.globalOnErrorResume = globalOnErrorResume;
+                this.retryConfigProvider = retryConfigProvider;
+                this.globalDoOnErrorConsumer = globalDoOnErrorConsumer;
+        }
+
+        // ...
 }
 ```
 
-配置一个函数，保证能够返回`GlobalErrorTransformer`的实例：
+配置一个函数，保证能够返回 `GlobalErrorTransformer` 的实例：
 
-```kotlin
-object RxUtils {
+```Java
+public class RxUtils {
 
-  fun <T> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T>{
-      return .....
-  }
+    public static <T> GlobalErrorTransformer<T> handleGlobalError() {
+        // ...
+    }
 }
 ```
 
-[点击这里](https://github.com/qingmei2/RxWeaver/blob/kotlin/sample/src/main/java/com/github/qingmei2/RxUtils.kt)查看sample中的配置方式示例。
+[点击这里](https://github.com/qingmei2/RxWeaver/blob/java/sample/src/main/java/com/github/qingmei2/RxUtils.java)查看sample中的配置方式示例。
 
 ### 3.对需要进行全局error处理的RxJava流中添加这行代码：
 
-```kotlin
-private fun requestHttp(observable: Observable<UserInfo>) {
+```Java
+private void fetchError(Observable<UserInfo> observable) {
     observable
-            .compose(RxUtils.handleGlobalError<UserInfo>(this))  // 将上面的接口配置给Observable
+            .compose(RxUtils.handleGlobalError(this))  // 将上面的接口配置给Observable
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
+            .subscribe(
                   // ....
-            }
+            )
 }
 ```
 
@@ -105,54 +115,58 @@ private fun requestHttp(observable: Observable<UserInfo>) {
 
 它的原理也是非常 **简单** 的，只要熟悉了 `onErrorResumeNext` 、 `retryWhen` 、 `doOnError` 这几个关键的操作符，你就可以马上上手对应的配置；它也是非常 **轻量** 的，轻到甚至可以直接把源代码复制粘贴到自己的项目中，通过jcenter依赖，它的体积也只有3kb。
 
-### 1. globalOnNextInterceptor: (T) -> Observable<T>
+### 1. globalOnNextInterceptor: Function<T, Observable<T>>
 
 **将正常数据转换为一个异常** 是很常见的需求，有时流中的数据可能会是一个错误的状态（比如，token失效）。
 
 `globalOnNextInterceptor` 函数内部直接使用 `flatMap()` 操作符将数据进行了转换，因此你可以将一个错误的状态转换为 `Observable.error()` 向下传递：
 
-```kotlin
-globalOnNextInterceptor = {
-    when (it.statusCode) {
-        STATUS_UNAUTHORIZED -> {        // token 失效，将流转换为error，交由下游处理
-            Observable.error(TokenExpiredException())
+```java
+new Function<T, Observable<T>>() {
+    @Override
+    public Observable<T> apply(T it) throws Exception {
+        switch (it.getStatusCode()) {
+            case STATUS_UNAUTHORIZED:   // token 失效，将流转换为error，交由下游处理
+                return Observable.error(new TokenExpiredException());
         }
-        else -> Observable.just(it)     // 其他情况，数据向下游正常传递
+        return Observable.just(it);     // 其他情况，数据向下游正常传递
     }
 }
 ```
 
-### 2. globalOnErrorResume: (Throwable) -> Observable<T>
+### 2. globalOnErrorResume: Function<Throwable, Observable<T>>
 
 和 `globalOnNextInterceptor` 函数很相似，更常见的情况是通过解析不同的 `Throwable` ，然后根据实际业务做出对应的处理：
 
-```kotlin
-globalOnErrorResume = { error ->
-    when (error) {
-        is ConnectException -> {        // 连接错误，转换为特殊的异常（标记作用），交给下游
-            Observable.error<T>(ConnectFailedAlertDialogException())
+```java
+new Function<Throwable, Observable<T>>() {
+    @Override
+    public Observable<T> apply(Throwable error) throws Exception {
+        if (error instanceof ConnectException) {    // 连接错误，转换为特殊的异常（标记作用），交给下游
+            return Observable.error(new ConnectFailedAlertDialogException());
         }
-        else -> Observable.error<T>(error)  // 其他情况，异常向下游正常传递
+        return Observable.error(error);     // 其他情况，异常向下游正常传递
     }
 }
 ```
 
 `globalOnErrorResume` 函数内部是通过 `onErrorResumeNext()` 操作符实现的。
 
-### 3.retryConfigProvider: (Throwable) -> RetryConfig
+### 3.retryConfigProvider: Function<Throwable, RetryConfig>
 
 当需要做出是否要重试的决定时，需要根据异常的类型进行判断，并做出对应的行为：
 
-```kotlin
-retryConfigProvider = { error ->
-    when (error) {
-        is ConnectFailedAlertDialogException -> RetryConfig {
-            // .....
+```java
+new Function<Throwable, RetryConfig>() {
+    @Override
+    public RetryConfig apply(Throwable error) throws Exception {
+        if (error instanceof ConnectFailedAlertDialogException) {
+            return new RetryConfig(  // ....   );
         }
-        is TokenExpiredException -> RetryConfig(delay = 3000) {
-            // .....
+        if (error instanceof TokenExpiredException) {
+            return new RetryConfig(  // ....   );
         }
-        else -> RetryConfig() // 其它异常都不重试
+        return new RetryConfig();   // 其它异常都不重试
     }
 }
 ```
@@ -160,18 +174,16 @@ retryConfigProvider = { error ->
 `retryConfigProvider` 函数内部是通过 `retryWhen()` 操作符实现的。
 
 
-### 4.globalDoOnErrorConsumer: (Throwable) -> Unit
+### 4.globalDoOnErrorConsumer: Consumer<Throwable>
 
 `globalDoOnErrorConsumer` 函数并不会拦截或消费上游发射的异常，它的内部实际上就是通过 `doOnError()` 操作符的调用，做一些 **顺势而为** 的处理,比如toast，或者其它。
 
-```kotlin
-globalDoOnErrorConsumer = { error ->
-    when (error) {
-        is JSONException -> {
-            Toast.makeText(activity, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()
-        }
-        else -> {
-
+```java
+new Consumer<Throwable>() {
+    @Override
+    public void accept(Throwable throwable) throws Exception {
+        if (throwable instanceof JSONException) {
+            Toast.makeText(activity, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show();
         }
     }
 }
@@ -188,6 +200,12 @@ globalDoOnErrorConsumer = { error ->
 **高度抽象** 意味着学习曲线的陡峭性，我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对 `RxJava` 的理解，这就是值得的。
 
 我非常喜欢 `RxWeaver` 的设计,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，它创建 **最初的目的** 就是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
+
+## 我的其他RxJava项目
+
+* [RxImagePicker: Support for RxJava2. Flexible picture selector of Android, provides the support for theme of Zhihu and WeChat.](https://github.com/qingmei2/RxImagePicker)
+
+* [MVVM-Rhine: The MVVM using RxJava and Android databinding.](https://github.com/qingmei2/MVVM-Rhine)
 
 ## License
 
