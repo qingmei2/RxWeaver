@@ -28,8 +28,11 @@ public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publish
                     public Publisher<?> apply(Throwable throwable) throws Exception {
 
                         RetryConfig retryConfig = provider.apply(throwable);
+                        final long delay = retryConfig.getDelay();
+                        final Throwable error = throwable;
 
                         if (++retryCount <= retryConfig.getMaxRetries()) {
+
                             return retryConfig
                                     .getRetryCondition()
                                     .call()
@@ -37,9 +40,9 @@ public class FlowableRetryDelay implements Function<Flowable<Throwable>, Publish
                                         @Override
                                         public Publisher<?> apply(Boolean retry) throws Exception {
                                             if (retry)
-                                                return Flowable.timer(retryConfig.getDelay(), TimeUnit.MILLISECONDS);
+                                                return Flowable.timer(delay, TimeUnit.MILLISECONDS);
                                             else
-                                                return Flowable.error(throwable);
+                                                return Flowable.error(error);
                                         }
                                     });
                         }

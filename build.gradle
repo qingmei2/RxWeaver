@@ -11,7 +11,7 @@ buildscript {
         classpath build_plugins.android_gradle
         classpath build_plugins.kotlin_gradle
 
-        classpath 'com.novoda:bintray-release:0.8.1'
+        classpath 'com.novoda:bintray-release:0.9'
     }
 }
 
@@ -25,5 +25,3 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
-
-tasks.getByPath(":rxweaver:releaseAndroidJavadocs").enabled = false

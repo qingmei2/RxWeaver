@@ -27,14 +27,22 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 
+@SuppressWarnings({"Convert2Lambda", "Anonymous2MethodRef"})
 public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
         SingleTransformer<T, T>,
         MaybeTransformer<T, T>,
         CompletableTransformer {
 
+    private static Suppiler<Scheduler> SCHEDULER_PROVIDER_DEFAULT = new Suppiler<Scheduler>() {
+        @Override
+        public Scheduler call() {
+            return AndroidSchedulers.mainThread();
+        }
+    };
+
     private Suppiler<Scheduler> upStreamSchedulerProvider;
-    private Suppiler<Scheduler> downStreamSchedlerProvider;
+    private Suppiler<Scheduler> downStreamSchedulerProvider;
 
     private Function<T, Observable<T>> globalOnNextRetryInterceptor;
     private Function<Throwable, Observable<T>> globalOnErrorResume;
@@ -46,8 +54,8 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                                   Function<Throwable, RetryConfig> retryConfigProvider,
                                   Consumer<Throwable> globalDoOnErrorConsumer) {
         this(
-                AndroidSchedulers::mainThread,
-                AndroidSchedulers::mainThread,
+                SCHEDULER_PROVIDER_DEFAULT,
+                SCHEDULER_PROVIDER_DEFAULT,
                 globalOnNextRetryInterceptor,
                 globalOnErrorResume,
                 retryConfigProvider,
@@ -56,13 +64,13 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
     }
 
     public GlobalErrorTransformer(Suppiler<Scheduler> upStreamSchedulerProvider,
-                                  Suppiler<Scheduler> downStreamSchedlerProvider,
+                                  Suppiler<Scheduler> downStreamSchedulerProvider,
                                   Function<T, Observable<T>> globalOnNextRetryInterceptor,
                                   Function<Throwable, Observable<T>> globalOnErrorResume,
                                   Function<Throwable, RetryConfig> retryConfigProvider,
                                   Consumer<Throwable> globalDoOnErrorConsumer) {
         this.upStreamSchedulerProvider = upStreamSchedulerProvider;
-        this.downStreamSchedlerProvider = downStreamSchedlerProvider;
+        this.downStreamSchedulerProvider = downStreamSchedulerProvider;
         this.globalOnNextRetryInterceptor = globalOnNextRetryInterceptor;
         this.globalOnErrorResume = globalOnErrorResume;
         this.retryConfigProvider = retryConfigProvider;
@@ -87,7 +95,7 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new ObservableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider.call());
+                .observeOn(downStreamSchedulerProvider.call());
     }
 
     @Override
@@ -103,7 +111,7 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider.call());
+                .observeOn(downStreamSchedulerProvider.call());
     }
 
     @Override
@@ -126,7 +134,7 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider.call());
+                .observeOn(downStreamSchedulerProvider.call());
     }
 
     @Override
@@ -149,7 +157,7 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider.call());
+                .observeOn(downStreamSchedulerProvider.call());
     }
 
     @Override
@@ -172,6 +180,6 @@ public class GlobalErrorTransformer<T> implements ObservableTransformer<T, T>,
                 })
                 .retryWhen(new FlowableRetryDelay(retryConfigProvider))
                 .doOnError(globalDoOnErrorConsumer)
-                .observeOn(downStreamSchedlerProvider.call());
+                .observeOn(downStreamSchedulerProvider.call());
     }
 }

@@ -27,6 +27,8 @@ public class ObservableRetryDelay implements Function<Observable<Throwable>, Obs
                     public ObservableSource<?> apply(Throwable throwable) throws Exception {
 
                         RetryConfig retryConfig = provider.apply(throwable);
+                        final long delay = retryConfig.getDelay();
+                        final Throwable error = throwable;
 
                         if (++retryCount <= retryConfig.getMaxRetries()) {
                             return retryConfig
@@ -36,9 +38,9 @@ public class ObservableRetryDelay implements Function<Observable<Throwable>, Obs
                                         @Override
                                         public ObservableSource<?> apply(Boolean retry) throws Exception {
                                             if (retry)
-                                                return Observable.timer(retryConfig.getDelay(), TimeUnit.MILLISECONDS);
+                                                return Observable.timer(delay, TimeUnit.MILLISECONDS);
                                             else
-                                                return Observable.error(throwable);
+                                                return Observable.error(error);
                                         }
                                     });
                         }
