@@ -44,7 +44,9 @@ dependencies {
     implementation libs.kotlin_stdlib
     implementation libs.rxkotlin
     implementation libs.rxandroid
-    implementation 'com.android.support:design:27.1.1'
     testImplementation libs.junit
     androidTestImplementation libs.espresso_core
+}
+repositories {
+    mavenCentral()
 }

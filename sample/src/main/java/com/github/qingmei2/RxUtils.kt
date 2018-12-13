@@ -9,7 +9,6 @@ import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import org.json.JSONException
 import java.net.ConnectException
 
@@ -29,10 +28,6 @@ object RxUtils {
     private const val GATEWAY_TIMEOUT = 504
 
     fun <T: BaseEntity> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
-
-            upStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
-
-            downStreamSchedulerProvider = { AndroidSchedulers.mainThread() },
 
             // 通过onNext流中数据的状态进行操作
             globalOnNextInterceptor = {
