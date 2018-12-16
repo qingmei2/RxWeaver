@@ -2,6 +2,10 @@
 
 <a href='https://bintray.com/mq2553299/maven/rxweaver/_latestVersion'><img src='https://api.bintray.com/packages/mq2553299/maven/rxweaver/images/download.svg'></a>
 
+关于这个repo的起源，请参考这篇文章：
+
+[不要打破链式调用！一个极低成本的RxJava全局Error处理方案](https://juejin.im/post/5be7bb9f6fb9a049f069c706)
+
 ## 简介
 
 关于`RxJava`的全局的error处理，通用的方案是通过 **继承**，将处理的逻辑加入到放入`Observer`导出类的`onError()`中，这种方式相对 **简单** 且 **易于上手**，但限制性在于：
@@ -12,7 +16,7 @@
 
 RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **AOP** 的思想，在既有的代码上  **插入** 或 **删除**  一行代码，即可实现全局Error处理的需求——而不是破坏`RxJava`所表达的 **响应式编程** 和 **函数式编程** 的思想。
 
-> 对于这个repo，我对待他的态度更像是一个思路的展示，如果你有兴趣，欢迎star或者fork，我更建议您通过复制源码的方式在自己的项目中实现。
+> 对于这个repo更应像是一个思路的展示，如果你有兴趣，欢迎star或者fork ——我更建议您通过复制源码的方式在自己的项目中实现，如果有疑问，欢迎加QQ群391638630一起探讨 :smile。
 
 ## 特性
 
@@ -26,11 +30,12 @@ RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **
 ### 1.添加依赖
 
 ```groovy
-implementation 'com.github.qingmei2.rxweaver:rxweaver:0.2.1'        // Writen by Kotlin
-implementation 'com.github.qingmei2.rxweaver:rxweaver_java:0.2.1'   // Writen by Java
+implementation 'com.github.qingmei2.rxweaver:rxweaver:0.3.0'
 ```
 
-RxWeaver默认的开发分支为`kotlin`,`Java`版本的 源码和示例代码请参考 **[这里](https://github.com/qingmei2/RxWeaver/tree/java)** 。
+默认的开发分支为`kotlin`,`Java`版本的源码和示例代码请参考 **[这里](https://github.com/qingmei2/RxWeaver/tree/java)** 。
+
+> 因个人精力有限，`Java`版本无法保证与`Kotlin`保持最新版本的同步，但是我尽量保证新的调整会尽快反映到`Java`分支上。
 
 ### 2.配置GlobalErrorTransformer
 
@@ -38,12 +43,10 @@ RxWeaver默认的开发分支为`kotlin`,`Java`版本的 源码和示例代码�
 
 ```Kotlin
 class GlobalErrorTransformer<T> constructor(
-        private val globalOnNextRetryInterceptor: (T) -> Observable<T> = { Observable.just(it) },
+        private val globalOnNextInterceptor: (T) -> Observable<T> = { Observable.just(it) },
         private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
         private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig() },
-        private val globalDoOnErrorConsumer: (Throwable) -> Unit = { },
-        private val upStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() },
-        private val downStreamSchedulerProvider: () -> Scheduler = { AndroidSchedulers.mainThread() }
+        private val globalDoOnErrorConsumer: (Throwable) -> Unit = { }
 ) : ObservableTransformer<T, T>, FlowableTransformer<T, T>, SingleTransformer<T, T>,  MaybeTransformer<T, T>, CompletableTransformer {
       // ...
 }
@@ -52,11 +55,8 @@ class GlobalErrorTransformer<T> constructor(
 配置一个函数，保证能够返回`GlobalErrorTransformer`的实例：
 
 ```kotlin
-object RxUtils {
-
-  fun <T> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T>{
-      return .....
-  }
+fun <T> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T>{
+  return .....
 }
 ```
 
@@ -67,7 +67,7 @@ object RxUtils {
 ```kotlin
 private fun requestHttp(observable: Observable<UserInfo>) {
     observable
-            .compose(RxUtils.handleGlobalError<UserInfo>(this))  // 将上面的接口配置给Observable
+            .compose(handleGlobalError<UserInfo>(this))  // 将上面的接口配置给Observable
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
@@ -100,7 +100,7 @@ private fun requestHttp(observable: Observable<UserInfo>) {
 
 ## 原理&如何配置GlobalErrorTransformer
 
-**RxWeaver** 是一个轻量且灵活的RxJava2 **全局Error处理中间件** ，这意味着，它并不是一个非常重，设计非常复杂的框架。**Weaver** 翻译过来叫做 **编织鸟**， 可以让开发者对error处理逻辑 **组织**，以达到实现全局Error的把控。
+**RxWeaver** 是一个轻量且灵活的RxJava2 **全局Error处理组件** ，这意味着，它并不是一个设计非常复杂的框架。**Weaver** 翻译过来叫做 **编织鸟**， 可以让开发者对error处理逻辑 **组织**，以达到实现全局Error的把控。
 
 它的核心原理是依赖 `compose()` 操作符——这是RxJava给我们提供的可以面向 **响应式数据类型** (Observable/Flowable/Single等等)进行 **AOP** 的接口, 可以对响应式数据类型 **加工** 、**修饰** ，甚至 **替换**。
 
