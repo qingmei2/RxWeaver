@@ -25,10 +25,4 @@ object RxDialog {
                     }
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .observeOn(Schedulers.io())
-
-//            【注意】上面的线程调度代码并未出错，因为从子线程的异步操作中，接收到错误并显示dialog;
-//                   这时需要把线程切换回MainThread, 在选择完成后，再将结果在子线程中返回给下游。
-//              ---> 比如，如果将线程调度的代码改成下面，则会出错:
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(AndroidSchedulers.mainThread())
 }

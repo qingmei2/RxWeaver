@@ -9,6 +9,7 @@ import com.github.qingmei2.model.NavigatorFragment
 import com.github.qingmei2.model.RxDialog
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import org.json.JSONException
 import java.net.ConnectException
 
@@ -27,7 +28,7 @@ object RxUtils {
     private const val SERVICE_UNAVAILABLE = 503
     private const val GATEWAY_TIMEOUT = 504
 
-    fun <T: BaseEntity> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
+    fun <T : BaseEntity<*>> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             // 通过onNext流中数据的状态进行操作
             globalOnNextInterceptor = {
@@ -55,8 +56,8 @@ object RxUtils {
                         RxDialog.showErrorDialog(activity, "ConnectException")
                     }
                     is TokenExpiredException -> RetryConfig(delay = 3000) {
-                        Toast.makeText(activity, "Token失效，跳转到Login重新登录！", Toast.LENGTH_SHORT).show()
-                        NavigatorFragment()
+                        // token失效，重新启用Login界面模拟用户请求
+                        NavigatorFragment
                                 .startLoginForResult(activity)
                                 .doOnSuccess { loginSuccess ->
                                     if (loginSuccess) {
@@ -65,6 +66,7 @@ object RxUtils {
                                         Toast.makeText(activity, "登陆失败,error继续向下游传递", Toast.LENGTH_SHORT).show()
                                     }
                                 }
+                                .observeOn(Schedulers.io()) // 下游的业务继续交给子线程处理
                     }
                     else -> RetryConfig() // 其它异常都不重试
                 }

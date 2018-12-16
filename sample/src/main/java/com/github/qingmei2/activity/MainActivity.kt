@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.github.qingmei2.BaseEntity
-import com.github.qingmei2.UserInfo
 import com.github.qingmei2.RxUtils
+import com.github.qingmei2.UserInfo
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
@@ -32,33 +32,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 简单的异常全局处理，比如弹一个toast，JSONException
-    private val obsToastError: Observable<UserInfo> = Observable.error(JSONException("JSONException"))
+    /**
+     * 简单的异常全局处理，比如弹一个toast，JSONException
+     */
+    private val obsToastError: Observable<BaseEntity<UserInfo>> =
+            Observable.error(JSONException("JSONException"))
 
-    // 复杂的异步处理，比如弹出一个dialog，用户操作决定流的下一步走向
-    private val obsConnectError: Observable<UserInfo> = Observable.error(ConnectException())
+    /**
+     * 复杂的异步处理，比如弹出一个dialog，用户操作决定流的下一步走向
+     */
+    private val obsConnectError: Observable<BaseEntity<UserInfo>> =
+            Observable.error(ConnectException())
 
-    // 十分复杂的处理，比如token失效，用户跳转login界面，重新登录成功后，继续重新请求
-    private val obsTokenError: Observable<UserInfo> = Observable.just(
-            UserInfo().also {
-                it.statusCode = 401
-                it.message = "unauthorized"
-            }
-    )
-
-    private fun fetchError(observable: Observable<UserInfo>) {
-        observable
-                .compose(RxUtils.handleGlobalError<UserInfo>(this))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeBy(
-                        onNext = {
-                            Toast.makeText(this, "onNext: $it", Toast.LENGTH_SHORT).show()
-                        },
-                        onError = {
-                            Toast.makeText(this, "onError: $it", Toast.LENGTH_SHORT).show()
-                            it.printStackTrace()
-                        }
+    /**
+     * 十分复杂的处理，比如token失效，用户跳转login界面，重新登录成功后，继续重新请求
+     */
+    private val obsTokenError =
+            Observable.create<BaseEntity<UserInfo>> { emitter ->
+                val entity = BaseEntity(
+                        statusCode = 401,
+                        message = "unauthorized",
+                        data = null
                 )
-    }
+                emitter.onNext(entity)
+            }
+
+    private fun fetchError(observable: Observable<BaseEntity<UserInfo>>) =
+            observable
+                    .compose(RxUtils.handleGlobalError<BaseEntity<*>>(this))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeBy(
+                            onNext = {
+                                Toast.makeText(this, "onNext: $it", Toast.LENGTH_SHORT).show()
+                            },
+                            onError = {
+                                Toast.makeText(this, "onError: $it", Toast.LENGTH_SHORT).show()
+                                it.printStackTrace()
+                            }
+                    )
+
 }

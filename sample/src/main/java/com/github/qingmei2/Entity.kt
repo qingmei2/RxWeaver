@@ -1,9 +1,12 @@
 package com.github.qingmei2
 
-open class BaseEntity {
-    var statusCode: Int = 0
-    var message: String = ""
-}
+data class BaseEntity<out T>(
+        val statusCode: Int,
+        val message: String,
+        val data: T?
+)
 
-data class UserInfo(val username: String = "",
-                    val age: Int = 0) : BaseEntity()
+data class UserInfo(
+        val username: String,
+        val age: Int
+)

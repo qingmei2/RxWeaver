@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import com.github.qingmei2.activity.LoginActivity
 import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.subjects.PublishSubject
 
 class NavigatorFragment : Fragment() {
@@ -14,20 +15,6 @@ class NavigatorFragment : Fragment() {
     private lateinit var resultSubject: PublishSubject<Boolean>
     private lateinit var cancelSubject: PublishSubject<Boolean>
     private val attachSubject = PublishSubject.create<Boolean>()
-
-    fun startLoginForResult(activity: FragmentActivity): Single<Boolean> {
-        val fragmentManager = activity.supportFragmentManager
-        val fragment = fragmentManager.findFragmentByTag(TAG)
-
-        return if (fragment == null) {
-            val transaction = fragmentManager.beginTransaction()
-            transaction.add(this, TAG).commitAllowingStateLoss()
-            this.startLoginSingle()
-        } else {
-            val navigatorFragment = fragment as NavigatorFragment
-            navigatorFragment.startLoginSingle()
-        }
-    }
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
@@ -68,6 +55,29 @@ class NavigatorFragment : Fragment() {
     }
 
     companion object {
-        const val TAG = "NavigatorFragment"
+
+        private const val TAG = "NavigatorFragment"
+
+        fun startLoginForResult(activity: FragmentActivity): Single<Boolean> {
+            val fragmentManager = activity.supportFragmentManager
+            val fragment = fragmentManager.findFragmentByTag(TAG)
+            return when (fragment == null) {
+                true -> {
+                    val transaction = fragmentManager.beginTransaction()
+                    NavigatorFragment()
+                            .run {
+                                transaction.add(this, TAG).commitAllowingStateLoss()
+                                startLoginSingle()
+                            }
+
+                }
+                false -> {
+                    val navigatorFragment = fragment as NavigatorFragment
+                    navigatorFragment.startLoginSingle()
+                }
+            }
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+        }
     }
 }
