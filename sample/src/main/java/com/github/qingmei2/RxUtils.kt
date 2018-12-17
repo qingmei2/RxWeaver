@@ -52,10 +52,10 @@ object RxUtils {
 
             retryConfigProvider = { error ->
                 when (error) {
-                    is ConnectFailedAlertDialogException -> RetryConfig {
+                    is ConnectFailedAlertDialogException -> RetryConfig.simpleInstance {
                         RxDialog.showErrorDialog(activity, "ConnectException")
                     }
-                    is TokenExpiredException -> RetryConfig(delay = 3000) {
+                    is TokenExpiredException -> RetryConfig.simpleInstance(delay = 3000) {
                         // token失效，重新启用Login界面模拟用户请求
                         NavigatorFragment
                                 .startLoginForResult(activity)
@@ -68,7 +68,7 @@ object RxUtils {
                                 }
                                 .observeOn(Schedulers.io()) // 下游的业务继续交给子线程处理
                     }
-                    else -> RetryConfig() // 其它异常都不重试
+                    else -> RetryConfig.none()      // 其它异常都不重试
                 }
             },
 

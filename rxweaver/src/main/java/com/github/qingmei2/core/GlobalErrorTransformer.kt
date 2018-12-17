@@ -8,7 +8,7 @@ import io.reactivex.*
 class GlobalErrorTransformer<T> constructor(
         private val globalOnNextInterceptor: (T) -> Observable<T> = { Observable.just(it) },
         private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
-        private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig() },
+        private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig.none() },
         private val globalDoOnErrorConsumer: (Throwable) -> Unit = { }
 ) : ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
