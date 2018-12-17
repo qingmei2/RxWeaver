@@ -31,7 +31,7 @@ object RxUtils {
     fun <T : BaseEntity<*>> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             // 通过onNext流中数据的状态进行操作
-            globalOnNextInterceptor = {
+            onNextInterceptor = {
                 when (it.statusCode) {
                     STATUS_UNAUTHORIZED -> {
                         Observable.error(TokenExpiredException())
@@ -41,7 +41,7 @@ object RxUtils {
             },
 
             // 通过onError中Throwable状态进行操作
-            globalOnErrorResume = { error ->
+            onErrorResumeNext = { error ->
                 when (error) {
                     is ConnectException -> {
                         Observable.error<T>(ConnectFailedAlertDialogException())
@@ -50,7 +50,7 @@ object RxUtils {
                 }
             },
 
-            retryConfigProvider = { error ->
+            onErrorRetrySupplier = { error ->
                 when (error) {
                     is ConnectFailedAlertDialogException -> RetryConfig.simpleInstance {
                         RxDialog.showErrorDialog(activity, "ConnectException")
@@ -72,7 +72,7 @@ object RxUtils {
                 }
             },
 
-            globalDoOnErrorConsumer = { error ->
+            onErrorConsumer = { error ->
                 when (error) {
                     is JSONException -> {
                         Toast.makeText(activity, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()

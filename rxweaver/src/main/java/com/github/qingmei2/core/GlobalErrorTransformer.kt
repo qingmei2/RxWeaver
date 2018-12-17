@@ -5,72 +5,74 @@ import com.github.qingmei2.retry.ObservableRetryDelay
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.*
 
+typealias OnNextInterceptor<T> = (T) -> Observable<T>
+typealias OnErrorResumeNext<T> = (Throwable) -> Observable<T>
+typealias OnErrorRetrySupplier = (Throwable) -> RetryConfig
+typealias OnErrorConsumer = (Throwable) -> Unit
+
 class GlobalErrorTransformer<T> constructor(
-        private val globalOnNextInterceptor: (T) -> Observable<T> = { Observable.just(it) },
-        private val globalOnErrorResume: (Throwable) -> Observable<T> = { Observable.error(it) },
-        private val retryConfigProvider: (Throwable) -> RetryConfig = { RetryConfig.none() },
-        private val globalDoOnErrorConsumer: (Throwable) -> Unit = { }
-) : ObservableTransformer<T, T>,
-        FlowableTransformer<T, T>,
-        SingleTransformer<T, T>,
-        MaybeTransformer<T, T>,
-        CompletableTransformer {
+        private val onNextInterceptor: OnNextInterceptor<T> = { Observable.just(it) },
+        private val onErrorResumeNext: OnErrorResumeNext<T> = { Observable.error(it) },
+        private val onErrorRetrySupplier: OnErrorRetrySupplier = { RetryConfig.none() },
+        private val onErrorConsumer: OnErrorConsumer = { }
+) : ObservableTransformer<T, T>, FlowableTransformer<T, T>, SingleTransformer<T, T>,
+        MaybeTransformer<T, T>, CompletableTransformer {
 
     override fun apply(upstream: Observable<T>): Observable<T> =
             upstream
                     .flatMap {
-                        globalOnNextInterceptor(it)
+                        onNextInterceptor(it)
                     }
                     .onErrorResumeNext { throwable: Throwable ->
-                        globalOnErrorResume(throwable)
+                        onErrorResumeNext(throwable)
                     }
-                    .retryWhen(ObservableRetryDelay(retryConfigProvider))
-                    .doOnError(globalDoOnErrorConsumer)
+                    .retryWhen(ObservableRetryDelay(onErrorRetrySupplier))
+                    .doOnError(onErrorConsumer)
 
     override fun apply(upstream: Completable): Completable =
             upstream
                     .onErrorResumeNext {
-                        globalOnErrorResume(it).ignoreElements()
+                        onErrorResumeNext(it).ignoreElements()
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
-                    .doOnError(globalDoOnErrorConsumer)
+                    .retryWhen(FlowableRetryDelay(onErrorRetrySupplier))
+                    .doOnError(onErrorConsumer)
 
     override fun apply(upstream: Flowable<T>): Flowable<T> =
             upstream
                     .flatMap {
-                        globalOnNextInterceptor(it)
+                        onNextInterceptor(it)
                                 .toFlowable(BackpressureStrategy.BUFFER)
                     }
                     .onErrorResumeNext { throwable: Throwable ->
-                        globalOnErrorResume(throwable)
+                        onErrorResumeNext(throwable)
                                 .toFlowable(BackpressureStrategy.BUFFER)
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
-                    .doOnError(globalDoOnErrorConsumer)
+                    .retryWhen(FlowableRetryDelay(onErrorRetrySupplier))
+                    .doOnError(onErrorConsumer)
 
     override fun apply(upstream: Maybe<T>): Maybe<T> =
             upstream
                     .flatMap {
-                        globalOnNextInterceptor(it)
+                        onNextInterceptor(it)
                                 .firstElement()
                     }
                     .onErrorResumeNext { throwable: Throwable ->
-                        globalOnErrorResume(throwable)
+                        onErrorResumeNext(throwable)
                                 .firstElement()
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
-                    .doOnError(globalDoOnErrorConsumer)
+                    .retryWhen(FlowableRetryDelay(onErrorRetrySupplier))
+                    .doOnError(onErrorConsumer)
 
     override fun apply(upstream: Single<T>): Single<T> =
             upstream
                     .flatMap {
-                        globalOnNextInterceptor(it)
+                        onNextInterceptor(it)
                                 .firstOrError()
                     }
                     .onErrorResumeNext { throwable ->
-                        globalOnErrorResume(throwable)
+                        onErrorResumeNext(throwable)
                                 .firstOrError()
                     }
-                    .retryWhen(FlowableRetryDelay(retryConfigProvider))
-                    .doOnError(globalDoOnErrorConsumer)
+                    .retryWhen(FlowableRetryDelay(onErrorRetrySupplier))
+                    .doOnError(onErrorConsumer)
 }

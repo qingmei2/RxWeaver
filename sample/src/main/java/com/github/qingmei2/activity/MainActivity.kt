@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun fetchError(observable: Observable<BaseEntity<UserInfo>>) =
             observable
-                    .compose(RxUtils.handleGlobalError<BaseEntity<*>>(this))
+                    .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeBy(
