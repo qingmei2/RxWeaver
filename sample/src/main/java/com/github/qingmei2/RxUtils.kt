@@ -3,6 +3,7 @@
 package com.github.qingmei2
 
 import android.support.v4.app.FragmentActivity
+import android.util.Log
 import android.widget.Toast
 import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.model.NavigatorFragment
@@ -75,7 +76,7 @@ object RxUtils {
             onErrorConsumer = { error ->
                 when (error) {
                     is JSONException -> {
-                        Toast.makeText(activity, "全局异常捕获-Json解析异常！", Toast.LENGTH_SHORT).show()
+                        Log.w("RxUtils", "全局异常捕获-Json解析异常！")
                     }
                     else -> {
 
