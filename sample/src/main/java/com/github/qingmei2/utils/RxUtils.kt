@@ -1,13 +1,15 @@
 @file:Suppress("UNREACHABLE_CODE")
 
-package com.github.qingmei2
+package com.github.qingmei2.utils
 
 import android.support.v4.app.FragmentActivity
 import android.util.Log
 import android.widget.Toast
+import com.github.qingmei2.entity.BaseEntity
+import com.github.qingmei2.entity.ConnectFailedAlertDialogException
+import com.github.qingmei2.entity.TokenExpiredException
 import com.github.qingmei2.core.GlobalErrorTransformer
-import com.github.qingmei2.model.NavigatorFragment
-import com.github.qingmei2.model.RxDialog
+import com.github.qingmei2.activity.widget.NavigatorFragment
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers

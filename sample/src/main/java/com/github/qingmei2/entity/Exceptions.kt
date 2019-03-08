@@ -1,4 +1,4 @@
-package com.github.qingmei2
+package com.github.qingmei2.entity
 
 import java.lang.Exception
 

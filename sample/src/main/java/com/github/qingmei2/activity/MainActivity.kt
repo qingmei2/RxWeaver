@@ -1,11 +1,12 @@
 package com.github.qingmei2.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
-import com.github.qingmei2.BaseEntity
-import com.github.qingmei2.RxUtils
-import com.github.qingmei2.UserInfo
+import com.github.qingmei2.entity.BaseEntity
+import com.github.qingmei2.utils.RxUtils
+import com.github.qingmei2.entity.UserInfo
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
@@ -29,6 +30,9 @@ class MainActivity : AppCompatActivity() {
         }
         btnTokenError.setOnClickListener {
             fetchError(obsTokenError)
+        }
+        mBtnMultiError.setOnClickListener {
+            startActivity(Intent(this, MultiAsyncActivity::class.java))
         }
     }
 

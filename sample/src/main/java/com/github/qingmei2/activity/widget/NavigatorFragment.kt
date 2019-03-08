@@ -1,4 +1,4 @@
-package com.github.qingmei2.model
+package com.github.qingmei2.activity.widget
 
 import android.app.Activity.RESULT_OK
 import android.content.Context

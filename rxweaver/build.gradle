@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'com.novoda.bintray-release'
 
 android {
     compileSdkVersion build_version.compileSdkVersion
@@ -13,7 +12,7 @@ android {
         versionName build_version.versionName
 
         multiDexEnabled true
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
         abortOnError false
@@ -43,13 +42,4 @@ dependencies {
 }
 repositories {
     mavenCentral()
-}
-
-publish {
-    userOrg = 'mq2553299'
-    groupId = 'com.github.qingmei2.rxweaver'
-    artifactId = 'rxweaver'
-    publishVersion = build_version.versionName
-    desc = 'A lightweight and flexible error handler tools for RxJava2.'
-    website = 'https://github.com/qingmei2/RxWeaver'
 }

@@ -1,4 +1,4 @@
-package com.github.qingmei2
+package com.github.qingmei2.entity
 
 data class BaseEntity<out T>(
         val statusCode: Int,
