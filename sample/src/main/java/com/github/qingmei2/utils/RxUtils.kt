@@ -5,11 +5,11 @@ package com.github.qingmei2.utils
 import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
+import com.github.qingmei2.activity.widget.NavigatorFragment
+import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.ConnectFailedAlertDialogException
 import com.github.qingmei2.entity.TokenExpiredException
-import com.github.qingmei2.core.GlobalErrorTransformer
-import com.github.qingmei2.activity.widget.NavigatorFragment
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
