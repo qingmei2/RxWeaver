@@ -16,8 +16,6 @@ import java.util.concurrent.TimeUnit
 
 class MultiAsyncActivity : AppCompatActivity() {
 
-    private var hasRefreshToken = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_multi_async)
@@ -31,13 +29,13 @@ class MultiAsyncActivity : AppCompatActivity() {
     private fun startMultiAsync() {
 
         // A接口
-        Observable.just(fakeRemoteDataSource())
+        Observable.fromCallable(::fakeRemoteDataSource)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { mTvLogs.appendLine("开始请求A接口,3秒后返回401状态码") }
                 .observeOn(Schedulers.io())
                 .delay(3, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
                 .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
+                .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->
                     mTvLogs.appendLine("A接口请求成功，用户信息：$userInfo")
@@ -46,13 +44,13 @@ class MultiAsyncActivity : AppCompatActivity() {
                 })
 
         // B接口
-        Observable.just(fakeRemoteDataSource())
+        Observable.fromCallable(::fakeRemoteDataSource)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { mTvLogs.appendLine("开始请求B接口,4秒后返回401状态码") }
                 .observeOn(Schedulers.io())
                 .delay(6, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
                 .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ userInfo ->
                     mTvLogs.appendLine("B接口请求成功，用户信息：$userInfo")
                 }, { error ->
@@ -61,7 +59,7 @@ class MultiAsyncActivity : AppCompatActivity() {
     }
 
     private fun fakeRemoteDataSource(): BaseEntity<UserInfo> {
-        return when (hasRefreshToken) {
+        return when (RxUtils.hasRefreshToken) {
             false -> BaseEntity(
                     statusCode = 401,
                     message = "unauthorized",

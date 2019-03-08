@@ -18,6 +18,8 @@ import java.net.ConnectException
 
 object RxUtils {
 
+    var hasRefreshToken = false
+
     /**
      * Status code
      */
@@ -65,6 +67,7 @@ object RxUtils {
                                 .doOnSuccess { loginSuccess ->
                                     if (loginSuccess) {
                                         Toast.makeText(activity, "登陆成功,3s延迟后重试！", Toast.LENGTH_SHORT).show()
+                                        hasRefreshToken = true
                                     } else {
                                         Toast.makeText(activity, "登陆失败,error继续向下游传递", Toast.LENGTH_SHORT).show()
                                     }
