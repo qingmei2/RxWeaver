@@ -3,8 +3,8 @@ package com.github.qingmei2.activity.widget
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import com.github.qingmei2.activity.LoginActivity
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers

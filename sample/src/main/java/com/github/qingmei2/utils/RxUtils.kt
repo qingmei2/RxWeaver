@@ -2,9 +2,9 @@
 
 package com.github.qingmei2.utils
 
-import android.support.v4.app.FragmentActivity
 import android.util.Log
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.ConnectFailedAlertDialogException
 import com.github.qingmei2.entity.TokenExpiredException
