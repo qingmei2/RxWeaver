@@ -3,16 +3,13 @@
 package com.github.qingmei2.utils
 
 import android.util.Log
-import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
-import com.github.qingmei2.activity.widget.NavigatorFragment
 import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.ConnectFailedAlertDialogException
 import com.github.qingmei2.entity.TokenExpiredException
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
 import org.json.JSONException
 import java.net.ConnectException
 
@@ -38,9 +35,7 @@ object RxUtils {
             // 通过onNext流中数据的状态进行操作
             onNextInterceptor = {
                 when (it.statusCode) {
-                    STATUS_UNAUTHORIZED -> {
-                        Observable.error(TokenExpiredException())
-                    }
+                    STATUS_UNAUTHORIZED -> Observable.error(TokenExpiredException)
                     else -> Observable.just(it)
                 }
             },
@@ -48,44 +43,34 @@ object RxUtils {
             // 通过onError中Throwable状态进行操作
             onErrorResumeNext = { error ->
                 when (error) {
-                    is ConnectException -> {
-                        Observable.error<T>(ConnectFailedAlertDialogException())
-                    }
+                    is ConnectException ->
+                        Observable.error<T>(ConnectFailedAlertDialogException)
+                    is TokenExpiredException ->
+                        Observable.error<T>(TokenExpiredProcessResult.WaitLoginInQueue)
                     else -> Observable.error<T>(error)
                 }
             },
 
             onErrorRetrySupplier = { error ->
                 when (error) {
-                    is ConnectFailedAlertDialogException -> RetryConfig.simpleInstance {
-                        RxDialog.showErrorDialog(activity, "ConnectException")
-                    }
-                    is TokenExpiredException -> RetryConfig.simpleInstance(delay = 3000) {
-                        // token失效，重新启用Login界面模拟用户请求
-                        NavigatorFragment
-                                .startLoginForResult(activity)
-                                .doOnSuccess { loginSuccess ->
-                                    if (loginSuccess) {
-                                        Toast.makeText(activity, "登陆成功,3s延迟后重试！", Toast.LENGTH_SHORT).show()
-                                        hasRefreshToken = true
-                                    } else {
-                                        Toast.makeText(activity, "登陆失败,error继续向下游传递", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                                .observeOn(Schedulers.io()) // 下游的业务继续交给子线程处理
-                    }
+                    is ConnectFailedAlertDialogException ->
+                        RetryConfig.simpleInstance {
+                            RxDialog.showErrorDialog(activity, "ConnectException")
+                        }
+                    is TokenExpiredProcessResult.WaitLoginInQueue ->
+                        RetryConfig.simpleInstance(delay = 1000) {
+                            Observable.error<Boolean>(error)
+                                    .compose(GlobalErrorProcessorHolder.tokenExpiredProcessor(activity))
+                                    .firstOrError()
+                        }
                     else -> RetryConfig.none()      // 其它异常都不重试
                 }
             },
 
             onErrorConsumer = { error ->
                 when (error) {
-                    is JSONException -> {
-                        Log.w("RxUtils", "全局异常捕获-Json解析异常！")
-                    }
-                    else -> {
-
-                    }
+                    is JSONException -> Log.w("rx stream Exception", "Json解析异常:${error.message}")
+                    else -> Log.w("rx stream Exception", "其它异常:${error.message}")
                 }
             }
     )
