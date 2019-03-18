@@ -9,15 +9,12 @@ import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.ConnectFailedAlertDialogException
 import com.github.qingmei2.entity.TokenExpiredException
 import com.github.qingmei2.retry.RetryConfig
-import io.reactivex.Completable
 import io.reactivex.Observable
 import org.json.JSONException
 import java.net.ConnectException
 import java.util.concurrent.TimeUnit
 
 object RxUtils {
-
-    var hasRefreshToken = false
 
     /**
      * Status code
@@ -71,10 +68,7 @@ object RxUtils {
                                     }
                                     .onErrorReturn { processorError ->
                                         when (processorError) {
-                                            is TokenExpiredProcessResult.LoginSuccess -> {
-                                                hasRefreshToken = true
-                                                true
-                                            }
+                                            is TokenExpiredProcessResult.LoginSuccess -> true
                                             is TokenExpiredProcessResult.LoginFailed -> false
                                             else -> false
                                         }
