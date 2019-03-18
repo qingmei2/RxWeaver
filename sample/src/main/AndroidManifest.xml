@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
 	package="qingmei2.github.qingmei2">
 
 	<!-- To auto-complete the email text field in the login form with the user's emails -->
@@ -13,7 +14,8 @@
 		android:label="@string/app_name"
 		android:roundIcon="@mipmap/ic_launcher_round"
 		android:supportsRtl="true"
-		android:theme="@style/AppTheme">
+		android:theme="@style/AppTheme"
+		tools:ignore="GoogleAppIndexingWarning">
 		<activity android:name="com.github.qingmei2.activity.MainActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -24,6 +26,12 @@
 		<activity
 			android:name="com.github.qingmei2.activity.login.LoginActivity"
 			android:label="登录" />
+		<activity
+			android:name="com.github.qingmei2.activity.A01SimpleToastActivity"
+			android:label="简单的Toast" />
+		<activity
+			android:name="com.github.qingmei2.activity.A02AlertDialogActivity"
+			android:label="弹出一个Dialog" />
 		<activity
 			android:name="com.github.qingmei2.activity.A03TokenExpiredActivity"
 			android:label="Token失效异常处理" />

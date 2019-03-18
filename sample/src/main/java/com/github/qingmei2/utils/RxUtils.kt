@@ -3,6 +3,7 @@
 package com.github.qingmei2.utils
 
 import android.util.Log
+import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.entity.BaseEntity
@@ -81,7 +82,10 @@ object RxUtils {
 
             onErrorConsumer = { error ->
                 when (error) {
-                    is JSONException -> Log.w("rx stream Exception", "Json解析异常:${error.message}")
+                    is JSONException -> {
+                        Toast.makeText(fragmentActivity, "$error", Toast.LENGTH_SHORT).show()
+                        Log.w("rx stream Exception", "Json解析异常:${error.message}")
+                    }
                     else -> Log.w("rx stream Exception", "其它异常:${error.message}")
                 }
             }
