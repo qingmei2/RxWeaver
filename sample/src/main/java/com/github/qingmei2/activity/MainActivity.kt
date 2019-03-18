@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
             fetchError(obsTokenError)
         }
         mBtnMultiError.setOnClickListener {
-            startActivity(Intent(this, MultiAsyncActivity::class.java))
+            startActivity(Intent(this, A04MultiAsyncActivity::class.java))
         }
     }
 

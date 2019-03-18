@@ -1,10 +1,18 @@
 # RxWeaver
 
-<a href='https://bintray.com/mq2553299/maven/rxweaver/_latestVersion'><img src='https://api.bintray.com/packages/mq2553299/maven/rxweaver/images/download.svg'></a>
-
 关于这个repo的起源，请参考这篇文章：
 
 [不要打破链式调用！一个极低成本的RxJava全局Error处理方案](https://juejin.im/post/5be7bb9f6fb9a049f069c706)
+
+## 通知
+
+* 关于移除了 `Gradle` 依赖的方式(2019/3/18)
+
+最新的代码中，我移除了 `Gradle` 依赖的方式，根本原因是，我认为这个 `repo` 被称为 **业务逻辑的展示** 更为确切——每个项目都有属于自己的特定业务，这些业务逻辑千变万化却又不离其宗。
+
+因此我把最基本的逻辑抽了出来，放在了`rxweaver`这个`Module`里，然后又把复杂的业务逻辑放在了`sample`中进行展示。我希望您能够从我的代码中得到灵感，即使它的代码可能对您来说非常抽象。
+
+同样也非常真诚的欢迎您宝贵的建议和讨论～
 
 ## 简介
 
@@ -16,8 +24,6 @@
 
 RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **AOP** 的思想，在既有的代码上  **插入** 或 **删除**  一行代码，即可实现全局Error处理的需求——而不是破坏`RxJava`所表达的 **响应式编程** 和 **函数式编程** 的思想。
 
-> 对于这个repo更应像是一个思路的展示，如果你有兴趣，欢迎star或者fork ——我更建议您通过复制源码的方式在自己的项目中实现，如果有疑问，欢迎加QQ群391638630一起探讨 :smile。
-
 ## 特性
 
 * 1.**轻量**：整个工具库只有4个类共不到200行代码，jar包体积仅3kb;
@@ -27,15 +33,15 @@ RxWeaver是轻量且灵活的RxJava2 **全局Error处理中间件** ，类似 **
 
 ## Usage
 
-### 1.添加依赖
+### 1.Fork/Clone项目,并将`rxweaver`模块的代码复制进自己的项目中，并进行对应的修改：
+
+> $ git clone https://github.com/qingmei2/RxWeaver.git
+
+~~或者直接添加依赖（不建议）~~：
 
 ```groovy
 implementation 'com.github.qingmei2.rxweaver:rxweaver:0.3.0'
 ```
-
-默认的开发分支为`kotlin`,`Java`版本的源码和示例代码请参考 **[这里](https://github.com/qingmei2/RxWeaver/tree/java)** 。
-
-> 因个人精力有限，`Java`版本无法保证与`Kotlin`保持最新版本的同步，但是我尽量保证新的调整会尽快反映到`Java`分支上。
 
 ### 2.配置GlobalErrorTransformer
 
@@ -177,24 +183,6 @@ globalDoOnErrorConsumer = { error ->
     }
 }
 ```
-
-## 关于RxJava
-
-在不断深入学习理解 `RxJava` 的过程中，我沉浸 `RxJava` 不可自拔，1年多前，如果问我 `RxJava` 能够实现什么，我可能会侃侃而谈；但是如今，我反而回答不了你，或者会尝试反问，你觉得 `RxJava` 实现不了什么？
-
-它太强大了！正如[这篇文章](https://juejin.im/post/5b8f5f0ee51d450ea52f6a37)所描述的：
-
-> RxJava 的操作符是我们平时处理业务逻辑时常用方法的 **高度抽象**.
-
-**高度抽象** 意味着学习曲线的陡峭性，我希望能把我自己的一些理解分享给大家——它不一定是最优秀的方案，但是如果它能让你在使用过程中增加对 `RxJava` 的理解，这就是值得的。
-
-我非常喜欢 `RxWeaver` 的设计,有朋友说说它代码有点少，但我却认为 **轻量** 是它最大的优点，它创建 **最初的目的** 就是帮助开发者 **对业务逻辑进行组织**，使其能够写出更 **Reactive** 和 **Functional** 的代码。
-
-## 我的其他RxJava项目
-
-* [RxImagePicker: Support for RxJava2. Flexible picture selector of Android, provides the support for theme of Zhihu and WeChat.](https://github.com/qingmei2/RxImagePicker)
-
-* [MVVM-Rhine: The MVVM using RxJava and Android databinding.](https://github.com/qingmei2/MVVM-Rhine)
 
 ## License
 

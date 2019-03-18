@@ -22,9 +22,10 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:name="com.github.qingmei2.activity.LoginActivity"
+			android:name="com.github.qingmei2.activity.login.LoginActivity"
 			android:label="@string/title_activity_login" />
-		<activity android:name="com.github.qingmei2.activity.MultiAsyncActivity" />
+		<activity android:name="com.github.qingmei2.activity.A03TokenExpiredActivity" />
+		<activity android:name="com.github.qingmei2.activity.A04MultiAsyncActivity" />
 	</application>
 
 </manifest>

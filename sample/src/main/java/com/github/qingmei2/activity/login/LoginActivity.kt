@@ -1,4 +1,4 @@
-package com.github.qingmei2.activity
+package com.github.qingmei2.activity.login
 
 import android.app.Activity
 import android.content.Intent

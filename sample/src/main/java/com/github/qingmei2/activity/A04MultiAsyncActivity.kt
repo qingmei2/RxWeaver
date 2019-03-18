@@ -15,7 +15,10 @@ import kotlinx.android.synthetic.main.activity_multi_async.*
 import qingmei2.github.qingmei2.R
 import java.util.concurrent.TimeUnit
 
-class MultiAsyncActivity : AppCompatActivity() {
+/**
+ * 多个异步请求的错误处理
+ */
+class A04MultiAsyncActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -29,16 +29,10 @@ android {
     }
 }
 
-def testJcenter = false
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    if (testJcenter) {
-        implementation "com.github.qingmei2.rxweaver:rxweaver:${build_version.versionName}"
-    } else {
-        implementation project(':rxweaver')
-    }
+    implementation project(':rxweaver')
 
     implementation libs.support_v7
     implementation libs.kotlin_stdlib
