@@ -10,6 +10,8 @@ object GlobalErrorProcessorHolder {
 
     var mLastRefreshTokenTimeStamp: Long = 0L
 
+    var mLastCancelRefreshTokenTimeStamp: Long = 0L
+
     var mIsBlocking: Boolean = false
 
     fun tokenExpiredProcessor(
@@ -23,9 +25,10 @@ object GlobalErrorProcessorHolder {
                 when (mIsBlocking) {
                     true -> {
                         Log.d("Tag", "继续循环队列")
-                        return@synchronized Observable.error<Boolean>(currentWaitLoginInQueue)
+                        Observable.error<Boolean>(currentWaitLoginInQueue)
                     }
                     false -> {
+                        Log.d("Tag", "处理单个消息")
                         mIsBlocking = true
                         return@synchronized when (mLastRefreshTokenTimeStamp > lastRefreshStamp) {
                             true -> {
@@ -37,33 +40,51 @@ object GlobalErrorProcessorHolder {
                                         .doOnError { GlobalErrorProcessorHolder.mIsBlocking = false }
                             }
                             false -> {
-                                Log.d("Tag", "单个消息处理，进入登录")
-                                NavigatorFragment
-                                        .startLoginForResult(currentActivity)
-                                        .doOnSuccess {
-                                            if (it) {
-                                                mLastRefreshTokenTimeStamp = System.currentTimeMillis()
-                                                Log.d("Tag", "doOnSuccess time = : $mLastRefreshTokenTimeStamp")
-                                            }
-                                        }
-                                        .observeOn(Schedulers.io())
-                                        .toObservable()
-                                        .flatMap { loginResult ->
-                                            when (loginResult) {
-                                                true -> {
-                                                    Observable.error<Boolean>(
-                                                            TokenExpiredProcessResult.LoginSuccess(lastRefreshStamp)
-                                                    )
-                                                }
-                                                false -> Observable.error<Boolean>(
+                                when (mLastCancelRefreshTokenTimeStamp > lastRefreshStamp) {
+                                    true -> {
+                                        Log.d("Tag", "单个消息处理，直接失败")
+                                        Observable
+                                                .error<Boolean>(
                                                         TokenExpiredProcessResult.LoginFailed(lastRefreshStamp)
                                                 )
-                                            }
-                                        }
-                                        .doOnError {
-                                            GlobalErrorProcessorHolder.mIsBlocking = false
-                                            Log.d("Tag", "doOnError mIsBlocking = false")
-                                        }
+                                                .doOnError { GlobalErrorProcessorHolder.mIsBlocking = false }
+                                    }
+                                    false -> {
+                                        Log.d("Tag", "单个消息处理，进入登录")
+                                        NavigatorFragment
+                                                .startLoginForResult(currentActivity)
+                                                .doOnSuccess {
+                                                    when (it) {
+                                                        true -> {
+                                                            mLastRefreshTokenTimeStamp = System.currentTimeMillis()
+                                                            Log.d("Tag", "登录成功，Token刷新= : $mLastRefreshTokenTimeStamp")
+                                                        }
+                                                        false -> {
+                                                            mLastCancelRefreshTokenTimeStamp = System.currentTimeMillis()
+                                                            Log.d("Tag", "登录失败，Cancel刷新= : $mLastRefreshTokenTimeStamp")
+                                                        }
+                                                    }
+                                                }
+                                                .observeOn(Schedulers.io())
+                                                .toObservable()
+                                                .flatMap { loginResult ->
+                                                    when (loginResult) {
+                                                        true -> {
+                                                            Observable.error<Boolean>(
+                                                                    TokenExpiredProcessResult.LoginSuccess(lastRefreshStamp)
+                                                            )
+                                                        }
+                                                        false -> Observable.error<Boolean>(
+                                                                TokenExpiredProcessResult.LoginFailed(lastRefreshStamp)
+                                                        )
+                                                    }
+                                                }
+                                                .doOnError {
+                                                    GlobalErrorProcessorHolder.mIsBlocking = false
+                                                    Log.d("Tag", "doOnError mIsBlocking = false")
+                                                }
+                                    }
+                                }
                             }
                         }
                     }
