@@ -3,15 +3,15 @@ package com.github.qingmei2.activity
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.github.qingmei2.api.FakeDataSource
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.UserInfo
-import com.github.qingmei2.utils.GlobalErrorProcessorHolder
 import com.github.qingmei2.utils.RxUtils
 import com.github.qingmei2.utils.appendLine
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_multi_async.*
+import kotlinx.android.synthetic.main.activity_04_multi_async.*
 import qingmei2.github.qingmei2.R
 import java.util.concurrent.TimeUnit
 
@@ -22,7 +22,7 @@ class A04MultiAsyncActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_multi_async)
+        setContentView(R.layout.activity_04_multi_async)
 
         mFabRequest.setOnClickListener { startMultiAsync() }
     }
@@ -33,7 +33,7 @@ class A04MultiAsyncActivity : AppCompatActivity() {
     private fun startMultiAsync() {
 
         // A接口
-        Observable.fromCallable(this::fakeRemoteDataSource)
+        Observable.fromCallable(FakeDataSource::queryUserInfo)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { entity ->
                     when (entity.statusCode == RxUtils.STATUS_OK) {
@@ -53,7 +53,7 @@ class A04MultiAsyncActivity : AppCompatActivity() {
                 })
 
         // B接口
-        Observable.fromCallable(this::fakeRemoteDataSource)
+        Observable.fromCallable(FakeDataSource::queryUserInfo)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { entity ->
                     when (entity.statusCode == RxUtils.STATUS_OK) {
@@ -70,28 +70,5 @@ class A04MultiAsyncActivity : AppCompatActivity() {
                 }, { error ->
                     mTvLogs.appendLine("B接口请求失败，异常信息：$error")
                 })
-    }
-
-    /**
-     * 模拟服务器返回数据
-     *
-     * 默认返回Token失效401码，用户需要重新登录，如果登录成功，则刷新重新请求；
-     * 15秒后，token会失效，再次请求仍然会得到401码。
-     */
-    private fun fakeRemoteDataSource(): BaseEntity<UserInfo> {
-        val currentTime = System.currentTimeMillis()
-        val lastTokenRefreshTime = GlobalErrorProcessorHolder.mLastRefreshTokenTimeStamp
-        return when (lastTokenRefreshTime != 0L && currentTime - lastTokenRefreshTime <= 15000) {
-            false -> BaseEntity(
-                    statusCode = RxUtils.STATUS_UNAUTHORIZED,
-                    message = "unauthorized",
-                    data = null
-            )
-            true -> BaseEntity(
-                    statusCode = RxUtils.STATUS_OK,
-                    message = "success",
-                    data = UserInfo("qingmei2", 26)
-            )
-        }
     }
 }

@@ -28,10 +28,10 @@ class MainActivity : AppCompatActivity() {
         btnConnectError.setOnClickListener {
             fetchError(obsConnectError)
         }
-        btnTokenError.setOnClickListener {
-            fetchError(obsTokenError)
+        mBtnTokenExpired.setOnClickListener {
+            startActivity(Intent(this, A03TokenExpiredActivity::class.java))
         }
-        mBtnMultiError.setOnClickListener {
+        mBtnMultiTokenExpired.setOnClickListener {
             startActivity(Intent(this, A04MultiAsyncActivity::class.java))
         }
     }
@@ -47,19 +47,6 @@ class MainActivity : AppCompatActivity() {
      */
     private val obsConnectError: Observable<BaseEntity<UserInfo>> =
             Observable.error(ConnectException())
-
-    /**
-     * 十分复杂的处理，比如token失效，用户跳转login界面，重新登录成功后，继续重新请求
-     */
-    private val obsTokenError =
-            Observable.create<BaseEntity<UserInfo>> { emitter ->
-                val entity = BaseEntity(
-                        statusCode = 401,
-                        message = "unauthorized",
-                        data = null
-                )
-                emitter.onNext(entity)
-            }
 
     private fun fetchError(observable: Observable<BaseEntity<UserInfo>>) =
             observable

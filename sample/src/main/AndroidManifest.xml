@@ -23,9 +23,13 @@
 		</activity>
 		<activity
 			android:name="com.github.qingmei2.activity.login.LoginActivity"
-			android:label="@string/title_activity_login" />
-		<activity android:name="com.github.qingmei2.activity.A03TokenExpiredActivity" />
-		<activity android:name="com.github.qingmei2.activity.A04MultiAsyncActivity" />
+			android:label="登录" />
+		<activity
+			android:name="com.github.qingmei2.activity.A03TokenExpiredActivity"
+			android:label="Token失效异常处理" />
+		<activity
+			android:name="com.github.qingmei2.activity.A04MultiAsyncActivity"
+			android:label="同时多个Token失效异常处理" />
 	</application>
 
 </manifest>
