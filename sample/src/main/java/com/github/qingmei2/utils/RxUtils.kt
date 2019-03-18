@@ -9,9 +9,11 @@ import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.ConnectFailedAlertDialogException
 import com.github.qingmei2.entity.TokenExpiredException
 import com.github.qingmei2.retry.RetryConfig
+import io.reactivex.Completable
 import io.reactivex.Observable
 import org.json.JSONException
 import java.net.ConnectException
+import java.util.concurrent.TimeUnit
 
 object RxUtils {
 
@@ -20,17 +22,10 @@ object RxUtils {
     /**
      * Status code
      */
-    private const val STATUS_OK = 200
-    private const val STATUS_UNAUTHORIZED = 401
-    private const val FORBIDDEN = 403
-    private const val NOT_FOUND = 404
-    private const val REQUEST_TIMEOUT = 408
-    private const val INTERNAL_SERVER_ERROR = 500
-    private const val BAD_GATEWAY = 502
-    private const val SERVICE_UNAVAILABLE = 503
-    private const val GATEWAY_TIMEOUT = 504
+    const val STATUS_OK = 200
+    const val STATUS_UNAUTHORIZED = 401
 
-    fun <T : BaseEntity<*>> handleGlobalError(activity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
+    fun <T : BaseEntity<*>> handleGlobalError(fragmentActivity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             // 通过onNext流中数据的状态进行操作
             onNextInterceptor = {
@@ -45,22 +40,45 @@ object RxUtils {
                 when (error) {
                     is ConnectException ->
                         Observable.error<T>(ConnectFailedAlertDialogException)
+                    // 如果是token失效，将其map为WaitLoginInQueue
+                    // 这个错误会在onErrorRetrySupplier()中处理
                     is TokenExpiredException ->
-                        Observable.error<T>(TokenExpiredProcessResult.WaitLoginInQueue)
+                        Observable.error<T>(TokenExpiredProcessResult.WaitLoginInQueue(System.currentTimeMillis()))
                     else -> Observable.error<T>(error)
                 }
             },
 
-            onErrorRetrySupplier = { error ->
-                when (error) {
+            onErrorRetrySupplier = { retrySupplierError ->
+                when (retrySupplierError) {
+                    // 网络连接异常，弹出dialog，并根据用户选择结果进行错误重试处理
                     is ConnectFailedAlertDialogException ->
                         RetryConfig.simpleInstance {
-                            RxDialog.showErrorDialog(activity, "ConnectException")
+                            RxDialog.showErrorDialog(fragmentActivity, "ConnectException")
                         }
+                    // 用户认证失败，弹出login界面
                     is TokenExpiredProcessResult.WaitLoginInQueue ->
-                        RetryConfig.simpleInstance(delay = 1000) {
-                            Observable.error<Boolean>(error)
-                                    .compose(GlobalErrorProcessorHolder.tokenExpiredProcessor(activity))
+                        RetryConfig.simpleInstance {
+                            GlobalErrorProcessorHolder
+                                    .tokenExpiredProcessor(fragmentActivity, retrySupplierError)
+                                    .retryWhen {
+                                        it.flatMap { processorError ->
+                                            when (processorError) {
+                                                is TokenExpiredProcessResult.WaitLoginInQueue ->
+                                                    Observable.timer(50, TimeUnit.MILLISECONDS)
+                                                else -> Observable.error(processorError)
+                                            }
+                                        }
+                                    }
+                                    .onErrorReturn { processorError ->
+                                        when (processorError) {
+                                            is TokenExpiredProcessResult.LoginSuccess -> {
+                                                hasRefreshToken = true
+                                                true
+                                            }
+                                            is TokenExpiredProcessResult.LoginFailed -> false
+                                            else -> false
+                                        }
+                                    }
                                     .firstOrError()
                         }
                     else -> RetryConfig.none()      // 其它异常都不重试

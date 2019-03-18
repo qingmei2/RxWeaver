@@ -29,9 +29,14 @@ class MultiAsyncActivity : AppCompatActivity() {
     private fun startMultiAsync() {
 
         // A接口
-        Observable.fromCallable(::fakeRemoteDataSource)
+        Observable.fromCallable(this::fakeRemoteDataSource)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext { mTvLogs.appendLine("开始请求A接口,3秒后返回401状态码") }
+                .doOnNext { entity ->
+                    when (entity.statusCode == RxUtils.STATUS_OK) {
+                        true -> mTvLogs.appendLine("请求A接口,3秒后成功返回用户信息")
+                        false -> mTvLogs.appendLine("请求A接口,3秒后返回失败和401状态码")
+                    }
+                }
                 .observeOn(Schedulers.io())
                 .delay(3, TimeUnit.SECONDS)
                 .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
@@ -44,11 +49,16 @@ class MultiAsyncActivity : AppCompatActivity() {
                 })
 
         // B接口
-        Observable.fromCallable(::fakeRemoteDataSource)
+        Observable.fromCallable(this::fakeRemoteDataSource)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext { mTvLogs.appendLine("开始请求B接口,4秒后返回401状态码") }
+                .doOnNext { entity ->
+                    when (entity.statusCode == RxUtils.STATUS_OK) {
+                        true -> mTvLogs.appendLine("请求B接口,4秒后成功返回用户信息")
+                        false -> mTvLogs.appendLine("请求B接口,4秒后返回失败和401状态码")
+                    }
+                }
                 .observeOn(Schedulers.io())
-                .delay(6, TimeUnit.SECONDS)
+                .delay(4, TimeUnit.SECONDS)
                 .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ userInfo ->
@@ -61,12 +71,12 @@ class MultiAsyncActivity : AppCompatActivity() {
     private fun fakeRemoteDataSource(): BaseEntity<UserInfo> {
         return when (RxUtils.hasRefreshToken) {
             false -> BaseEntity(
-                    statusCode = 401,
+                    statusCode = RxUtils.STATUS_UNAUTHORIZED,
                     message = "unauthorized",
                     data = null
             )
             true -> BaseEntity(
-                    statusCode = 200,
+                    statusCode = RxUtils.STATUS_OK,
                     message = "success",
                     data = UserInfo("qingmei2", 26)
             )
