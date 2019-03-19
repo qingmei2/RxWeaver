@@ -43,7 +43,7 @@ class A04MultiAsyncActivity : AppCompatActivity() {
                 }
                 .observeOn(Schedulers.io())
                 .delay(3, TimeUnit.SECONDS)
-                .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
+                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->
@@ -63,7 +63,7 @@ class A04MultiAsyncActivity : AppCompatActivity() {
                 }
                 .observeOn(Schedulers.io())
                 .delay(4, TimeUnit.SECONDS)
-                .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
+                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ userInfo ->
                     mTvLogs.appendLine("B接口请求成功，用户信息：$userInfo")

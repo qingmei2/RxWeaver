@@ -28,7 +28,7 @@ class A01SimpleToastActivity : AppCompatActivity() {
     @SuppressLint("CheckResult")
     private fun queryUserInfo() {
         Observable.error<BaseEntity<UserInfo>>(JSONException("JSONException"))
-                .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this)) // 仅仅是弹一个toast
+                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this)) // 仅仅是弹一个toast
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->

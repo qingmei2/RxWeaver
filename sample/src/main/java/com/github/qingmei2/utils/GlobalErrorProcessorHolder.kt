@@ -8,10 +8,11 @@ import io.reactivex.schedulers.Schedulers
 
 object GlobalErrorProcessorHolder {
 
+    @Volatile
     var mLastRefreshTokenTimeStamp: Long = 0L
-
+    @Volatile
     var mLastCancelRefreshTokenTimeStamp: Long = 0L
-
+    @Volatile
     var mIsBlocking: Boolean = false
 
     fun tokenExpiredProcessor(

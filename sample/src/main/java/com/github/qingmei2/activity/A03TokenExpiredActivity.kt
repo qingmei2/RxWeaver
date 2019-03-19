@@ -39,7 +39,7 @@ class A03TokenExpiredActivity : AppCompatActivity() {
                 }
                 .observeOn(Schedulers.io())
                 .delay(2, TimeUnit.SECONDS)
-                .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this))
+                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->

@@ -28,7 +28,7 @@ class A02AlertDialogActivity : AppCompatActivity() {
     @SuppressLint("CheckResult")
     private fun queryUserInfo() {
         Observable.error<BaseEntity<UserInfo>>(ConnectException())
-                .compose(RxUtils.handleGlobalError<BaseEntity<UserInfo>>(this)) // 弹出dialog
+                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this)) // 弹出dialog
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->

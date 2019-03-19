@@ -23,7 +23,7 @@ object RxUtils {
     const val STATUS_OK = 200
     const val STATUS_UNAUTHORIZED = 401
 
-    fun <T : BaseEntity<*>> handleGlobalError(fragmentActivity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
+    fun <T : BaseEntity<*>> processGlobalError(fragmentActivity: FragmentActivity): GlobalErrorTransformer<T> = GlobalErrorTransformer(
 
             // 通过onNext流中数据的状态进行操作
             onNextInterceptor = {
