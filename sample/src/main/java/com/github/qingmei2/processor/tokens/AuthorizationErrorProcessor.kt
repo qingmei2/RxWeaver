@@ -1,10 +1,9 @@
-package com.github.qingmei2.processor
+package com.github.qingmei2.processor.tokens
 
 import androidx.fragment.app.FragmentActivity
 import com.github.qingmei2.activity.login.NavigatorFragment
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
 
 object AuthorizationErrorProcessor {
 
@@ -103,7 +102,9 @@ object AuthorizationErrorProcessor {
         return obs.flatMap { processorError ->
             when (processorError) {
                 is AuthorizationErrorProcessResult.WaitLoginInQueue ->
-                    Observable.timer(50, TimeUnit.MILLISECONDS)
+                    RxHandlerDelegate
+                            .getInstance()
+                            .sendMessage(processorError.lastRefreshStamp)
                 else -> Observable.error(processorError)
             }
         }

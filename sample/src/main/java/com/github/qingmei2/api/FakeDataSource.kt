@@ -2,7 +2,7 @@ package com.github.qingmei2.api
 
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.UserInfo
-import com.github.qingmei2.processor.AuthorizationErrorProcessor
+import com.github.qingmei2.processor.tokens.AuthorizationErrorProcessor
 import com.github.qingmei2.processor.GlobalErrorProcessor
 
 object FakeDataSource {

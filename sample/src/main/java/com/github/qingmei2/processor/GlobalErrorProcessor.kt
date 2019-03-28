@@ -8,6 +8,8 @@ import androidx.fragment.app.FragmentActivity
 import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.Errors
+import com.github.qingmei2.processor.tokens.AuthorizationErrorProcessResult
+import com.github.qingmei2.processor.tokens.AuthorizationErrorProcessor
 import com.github.qingmei2.retry.RetryConfig
 import com.github.qingmei2.utils.RxDialog
 import io.reactivex.Observable
