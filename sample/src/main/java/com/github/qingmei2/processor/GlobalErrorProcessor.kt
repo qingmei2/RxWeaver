@@ -1,6 +1,6 @@
 @file:Suppress("UNREACHABLE_CODE")
 
-package com.github.qingmei2.utils
+package com.github.qingmei2.processor
 
 import android.util.Log
 import android.widget.Toast
@@ -9,12 +9,12 @@ import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.Errors
 import com.github.qingmei2.retry.RetryConfig
+import com.github.qingmei2.utils.RxDialog
 import io.reactivex.Observable
 import org.json.JSONException
 import java.net.ConnectException
-import java.util.concurrent.TimeUnit
 
-object RxUtils {
+object GlobalErrorProcessor {
 
     /**
      * Status code
@@ -55,24 +55,15 @@ object RxUtils {
                     // 用户认证失败，弹出login界面
                     is Errors.AuthorizationError ->
                         RetryConfig.simpleInstance {
-                            val waitLogin = TokenExpiredProcessResult.WaitLoginInQueue(
+                            val waitLogin = AuthorizationErrorProcessResult.WaitLoginInQueue(
                                     lastRefreshStamp = retrySupplierError.timeStamp
                             )
-                            GlobalErrorProcessorHolder
-                                    .tokenExpiredProcessor(fragmentActivity, waitLogin)
-                                    .retryWhen {
-                                        it.flatMap { processorError ->
-                                            when (processorError) {
-                                                is TokenExpiredProcessResult.WaitLoginInQueue ->
-                                                    Observable.timer(50, TimeUnit.MILLISECONDS)
-                                                else -> Observable.error(processorError)
-                                            }
-                                        }
-                                    }
+                            AuthorizationErrorProcessor.processTokenExpiredError(fragmentActivity, waitLogin)
                                     .onErrorReturn { processorError ->
                                         when (processorError) {
-                                            is TokenExpiredProcessResult.LoginSuccess -> true
-                                            is TokenExpiredProcessResult.LoginFailed -> false
+                                            is AuthorizationErrorProcessResult.LoginSuccess -> true
+                                            is AuthorizationErrorProcessResult.LoginFailed,
+                                            is AuthorizationErrorProcessResult.WaitLoginInQueue -> false
                                             else -> false
                                         }
                                     }

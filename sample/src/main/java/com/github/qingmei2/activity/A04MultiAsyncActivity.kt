@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.github.qingmei2.api.FakeDataSource
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.UserInfo
-import com.github.qingmei2.utils.RxUtils
+import com.github.qingmei2.processor.GlobalErrorProcessor
 import com.github.qingmei2.utils.appendLine
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -36,14 +36,14 @@ class A04MultiAsyncActivity : AppCompatActivity() {
         Observable.fromCallable(FakeDataSource::queryUserInfo)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { entity ->
-                    when (entity.statusCode == RxUtils.STATUS_OK) {
+                    when (entity.statusCode == GlobalErrorProcessor.STATUS_OK) {
                         true -> mTvLogs.appendLine("请求A接口,3秒后成功返回用户信息")
                         false -> mTvLogs.appendLine("请求A接口,3秒后返回失败和401状态码")
                     }
                 }
                 .observeOn(Schedulers.io())
                 .delay(3, TimeUnit.SECONDS)
-                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this))
+                .compose(GlobalErrorProcessor.processGlobalError<BaseEntity<UserInfo>>(this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->
@@ -56,14 +56,14 @@ class A04MultiAsyncActivity : AppCompatActivity() {
         Observable.fromCallable(FakeDataSource::queryUserInfo)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { entity ->
-                    when (entity.statusCode == RxUtils.STATUS_OK) {
+                    when (entity.statusCode == GlobalErrorProcessor.STATUS_OK) {
                         true -> mTvLogs.appendLine("请求B接口,4秒后成功返回用户信息")
                         false -> mTvLogs.appendLine("请求B接口,4秒后返回失败和401状态码")
                     }
                 }
                 .observeOn(Schedulers.io())
                 .delay(4, TimeUnit.SECONDS)
-                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this))
+                .compose(GlobalErrorProcessor.processGlobalError<BaseEntity<UserInfo>>(this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ userInfo ->
                     mTvLogs.appendLine("B接口请求成功，用户信息：$userInfo")

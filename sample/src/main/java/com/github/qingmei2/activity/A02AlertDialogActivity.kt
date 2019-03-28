@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.UserInfo
-import com.github.qingmei2.utils.RxUtils
+import com.github.qingmei2.processor.GlobalErrorProcessor
 import com.github.qingmei2.utils.appendLine
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -28,7 +28,7 @@ class A02AlertDialogActivity : AppCompatActivity() {
     @SuppressLint("CheckResult")
     private fun queryUserInfo() {
         Observable.error<BaseEntity<UserInfo>>(ConnectException())
-                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this)) // 弹出dialog
+                .compose(GlobalErrorProcessor.processGlobalError<BaseEntity<UserInfo>>(this)) // 弹出dialog
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->

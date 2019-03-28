@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.UserInfo
-import com.github.qingmei2.utils.RxUtils
+import com.github.qingmei2.processor.GlobalErrorProcessor
 import com.github.qingmei2.utils.appendLine
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -28,7 +28,7 @@ class A01SimpleToastActivity : AppCompatActivity() {
     @SuppressLint("CheckResult")
     private fun queryUserInfo() {
         Observable.error<BaseEntity<UserInfo>>(JSONException("JSONException"))
-                .compose(RxUtils.processGlobalError<BaseEntity<UserInfo>>(this)) // 仅仅是弹一个toast
+                .compose(GlobalErrorProcessor.processGlobalError<BaseEntity<UserInfo>>(this)) // 仅仅是弹一个toast
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { it.data!! }
                 .subscribe({ userInfo ->

@@ -2,8 +2,8 @@ package com.github.qingmei2.api
 
 import com.github.qingmei2.entity.BaseEntity
 import com.github.qingmei2.entity.UserInfo
-import com.github.qingmei2.utils.GlobalErrorProcessorHolder
-import com.github.qingmei2.utils.RxUtils
+import com.github.qingmei2.processor.AuthorizationErrorProcessor
+import com.github.qingmei2.processor.GlobalErrorProcessor
 
 object FakeDataSource {
 
@@ -15,15 +15,15 @@ object FakeDataSource {
      */
     fun queryUserInfo(): BaseEntity<UserInfo> {
         val currentTime = System.currentTimeMillis()
-        val lastTokenRefreshTime = GlobalErrorProcessorHolder.mLastRefreshTokenTimeStamp
+        val lastTokenRefreshTime = AuthorizationErrorProcessor.mLastRefreshTokenTimeStamp
         return when (lastTokenRefreshTime != 0L && currentTime - lastTokenRefreshTime <= 15000) {
             false -> BaseEntity(
-                    statusCode = RxUtils.STATUS_UNAUTHORIZED,
+                    statusCode = GlobalErrorProcessor.STATUS_UNAUTHORIZED,
                     message = "unauthorized",
                     data = null
             )
             true -> BaseEntity(
-                    statusCode = RxUtils.STATUS_OK,
+                    statusCode = GlobalErrorProcessor.STATUS_OK,
                     message = "success",
                     data = UserInfo("qingmei2", 26)
             )
