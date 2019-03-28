@@ -23,7 +23,7 @@ object AuthorizationErrorProcessor {
                         Observable.error<Boolean>(currentWaitLoginInQueue)
                     }
                     false -> {
-                        mIsBlocking = true
+                        this.updateIsBlockingState(true)
                         when (mLastRefreshTokenTimeStamp > lastRefreshStamp) {
                             true -> {
                                 processLoginSuccessMessage(lastRefreshStamp)
