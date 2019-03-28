@@ -1,7 +1,8 @@
 package com.github.qingmei2.entity
 
-open class CustomException : Exception()
+sealed class Errors : Exception() {
 
-object ConnectFailedAlertDialogException : CustomException()
+    object ConnectFailedException : Errors()
 
-object TokenExpiredException : CustomException()
+    data class AuthorizationError(val timeStamp: Long) : Errors()
+}

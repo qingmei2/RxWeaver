@@ -7,8 +7,7 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.github.qingmei2.core.GlobalErrorTransformer
 import com.github.qingmei2.entity.BaseEntity
-import com.github.qingmei2.entity.ConnectFailedAlertDialogException
-import com.github.qingmei2.entity.TokenExpiredException
+import com.github.qingmei2.entity.Errors
 import com.github.qingmei2.retry.RetryConfig
 import io.reactivex.Observable
 import org.json.JSONException
@@ -28,7 +27,9 @@ object RxUtils {
             // 通过onNext流中数据的状态进行操作
             onNextInterceptor = {
                 when (it.statusCode) {
-                    STATUS_UNAUTHORIZED -> Observable.error(TokenExpiredException)
+                    STATUS_UNAUTHORIZED -> Observable.error(
+                            Errors.AuthorizationError(timeStamp = System.currentTimeMillis())
+                    )
                     else -> Observable.just(it)
                 }
             },
@@ -37,11 +38,9 @@ object RxUtils {
             onErrorResumeNext = { error ->
                 when (error) {
                     is ConnectException ->
-                        Observable.error<T>(ConnectFailedAlertDialogException)
-                    // 如果是token失效，将其map为WaitLoginInQueue
+                        Observable.error<T>(Errors.ConnectFailedException)
                     // 这个错误会在onErrorRetrySupplier()中处理
-                    is TokenExpiredException ->
-                        Observable.error<T>(TokenExpiredProcessResult.WaitLoginInQueue(System.currentTimeMillis()))
+                    is Errors.AuthorizationError -> Observable.error<T>(error)
                     else -> Observable.error<T>(error)
                 }
             },
@@ -49,15 +48,18 @@ object RxUtils {
             onErrorRetrySupplier = { retrySupplierError ->
                 when (retrySupplierError) {
                     // 网络连接异常，弹出dialog，并根据用户选择结果进行错误重试处理
-                    is ConnectFailedAlertDialogException ->
+                    Errors.ConnectFailedException ->
                         RetryConfig.simpleInstance {
                             RxDialog.showErrorDialog(fragmentActivity, "ConnectException")
                         }
                     // 用户认证失败，弹出login界面
-                    is TokenExpiredProcessResult.WaitLoginInQueue ->
+                    is Errors.AuthorizationError ->
                         RetryConfig.simpleInstance {
+                            val waitLogin = TokenExpiredProcessResult.WaitLoginInQueue(
+                                    lastRefreshStamp = retrySupplierError.timeStamp
+                            )
                             GlobalErrorProcessorHolder
-                                    .tokenExpiredProcessor(fragmentActivity, retrySupplierError)
+                                    .tokenExpiredProcessor(fragmentActivity, waitLogin)
                                     .retryWhen {
                                         it.flatMap { processorError ->
                                             when (processorError) {
