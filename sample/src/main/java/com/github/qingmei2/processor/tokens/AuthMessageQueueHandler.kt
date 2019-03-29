@@ -8,20 +8,19 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 
-class RxHandlerDelegate : Runnable {
+class AuthMessageQueueHandler : Runnable {
 
     private var mService: ExecutorService = Executors.newSingleThreadExecutor()
 
-    private var mMessageQueue: LinkedBlockingQueue<MessageWrapper> = LinkedBlockingQueue()
+    private var mMessageQueue: LinkedBlockingQueue<AuthMessage> = LinkedBlockingQueue()
 
-    private val mMessageSubject: PublishSubject<MessageWrapper> =
-            PublishSubject.create<MessageWrapper>()
+    private val mMessageSubject: PublishSubject<AuthMessage> =
+            PublishSubject.create<AuthMessage>()
 
     init {
         mService.submit(this)
     }
 
-    @SuppressLint("HandlerLeak")
     override fun run() {
         while (true) {
             Thread.sleep(200)
@@ -37,7 +36,7 @@ class RxHandlerDelegate : Runnable {
         }
     }
 
-    fun sendMessage(timeStamp: Long): Observable<MessageWrapper> {
+    fun sendMessage(timeStamp: Long): Observable<AuthMessage> {
         val msg = obtainMessageWrapper(timeStamp)
         mMessageQueue.put(msg)
 
@@ -46,18 +45,18 @@ class RxHandlerDelegate : Runnable {
                 .observeOn(Schedulers.io())
     }
 
-    private fun obtainMessageWrapper(timeStamp: Long): MessageWrapper {
-        return MessageWrapper(timeStamp)
+    private fun obtainMessageWrapper(timeStamp: Long): AuthMessage {
+        return AuthMessage(timeStamp)
     }
 
     companion object {
 
         @Volatile
-        private var instance: RxHandlerDelegate? = null
+        private var instance: AuthMessageQueueHandler? = null
 
-        fun getInstance(): RxHandlerDelegate =
+        fun getInstance(): AuthMessageQueueHandler =
                 instance ?: synchronized(this) {
-                    instance ?: RxHandlerDelegate().apply {
+                    instance ?: AuthMessageQueueHandler().apply {
                         instance = this
                     }
                 }

@@ -1,5 +1,5 @@
 package com.github.qingmei2.processor.tokens
 
-data class MessageWrapper(
+data class AuthMessage(
         val timeStamp: Long
 )

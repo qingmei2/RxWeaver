@@ -107,7 +107,7 @@ object AuthorizationErrorProcessor {
         return obs.flatMap { processorError ->
             when (processorError) {
                 is AuthorizationErrorProcessResult.WaitLoginInQueue ->
-                    RxHandlerDelegate
+                    AuthMessageQueueHandler
                             .getInstance()
                             .sendMessage(processorError.lastRefreshStamp)
                 else -> Observable.error(processorError)
