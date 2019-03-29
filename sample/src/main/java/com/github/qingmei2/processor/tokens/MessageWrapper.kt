@@ -1,5 +1,5 @@
 package com.github.qingmei2.processor.tokens
 
-data class RxHandlerMessage(
+data class MessageWrapper(
         val timeStamp: Long
 )

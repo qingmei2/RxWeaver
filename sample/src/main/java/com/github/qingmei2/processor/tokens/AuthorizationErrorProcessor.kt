@@ -7,9 +7,14 @@ import io.reactivex.schedulers.Schedulers
 
 object AuthorizationErrorProcessor {
 
+    @Volatile
+    private var mLastCancelRefreshTokenTimeStamp: Long = 0L
+    @Volatile
     var mLastRefreshTokenTimeStamp: Long = 0L
-    var mLastCancelRefreshTokenTimeStamp: Long = 0L
+        private set
+    @Volatile
     var mIsBlocking: Boolean = false
+        private set
 
     fun processTokenExpiredError(
             currentActivity: FragmentActivity,

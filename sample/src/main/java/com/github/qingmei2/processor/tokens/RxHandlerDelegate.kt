@@ -1,48 +1,53 @@
 package com.github.qingmei2.processor.tokens
 
 import android.annotation.SuppressLint
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
 
-class RxHandlerDelegate : Thread() {
+class RxHandlerDelegate : Runnable {
 
-    private lateinit var mHandler: Handler
+    private var mService: ExecutorService = Executors.newSingleThreadExecutor()
 
-    private val mMessageSubject: PublishSubject<RxHandlerMessage> =
-            PublishSubject.create<RxHandlerMessage>()
+    private var mMessageQueue: LinkedBlockingQueue<MessageWrapper> = LinkedBlockingQueue()
+
+    private val mMessageSubject: PublishSubject<MessageWrapper> =
+            PublishSubject.create<MessageWrapper>()
+
+    init {
+        mService.submit(this)
+    }
 
     @SuppressLint("HandlerLeak")
     override fun run() {
-        super.run()
-        Looper.prepare()
-
-        mHandler = object : Handler() {
-
-            override fun handleMessage(msg: Message) {
-                val messageWrapper = msg.obj as RxHandlerMessage
-                mMessageSubject.onNext(messageWrapper)
+        while (true) {
+            Thread.sleep(200)
+            while (AuthorizationErrorProcessor.mIsBlocking.not()) {
+                val msg = mMessageQueue.take()
+                when (AuthorizationErrorProcessor.mIsBlocking) {
+                    true -> {
+                        mMessageQueue.put(msg)
+                    }
+                    false -> mMessageSubject.onNext(msg)
+                }
             }
         }
-
-        Looper.loop()
     }
 
-    fun sendMessage(timeStamp: Long): Observable<RxHandlerMessage> {
-        val message = Message.obtain()
-        message.obj = obtainMessageWrapper(timeStamp)
-        mHandler.sendMessageDelayed(message, 200)
+    fun sendMessage(timeStamp: Long): Observable<MessageWrapper> {
+        val msg = obtainMessageWrapper(timeStamp)
+        mMessageQueue.put(msg)
 
         return mMessageSubject
                 .filter { it.timeStamp == timeStamp }
-                .firstOrError()
-                .toObservable()
+                .observeOn(Schedulers.io())
     }
 
-    private fun obtainMessageWrapper(timeStamp: Long): RxHandlerMessage {
-        return RxHandlerMessage(timeStamp)
+    private fun obtainMessageWrapper(timeStamp: Long): MessageWrapper {
+        return MessageWrapper(timeStamp)
     }
 
     companion object {
@@ -54,7 +59,6 @@ class RxHandlerDelegate : Thread() {
                 instance ?: synchronized(this) {
                     instance ?: RxHandlerDelegate().apply {
                         instance = this
-                        this.start()
                     }
                 }
     }
