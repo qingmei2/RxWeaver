@@ -1,6 +1,5 @@
 package com.github.qingmei2.processor.tokens
 
-import android.annotation.SuppressLint
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
@@ -26,11 +25,9 @@ class AuthMessageQueueHandler : Runnable {
             Thread.sleep(200)
             while (AuthorizationErrorProcessor.mIsBlocking.not()) {
                 val msg = mMessageQueue.take()
-                when (AuthorizationErrorProcessor.mIsBlocking) {
-                    true -> {
-                        mMessageQueue.put(msg)
-                    }
-                    false -> mMessageSubject.onNext(msg)
+                when (AuthorizationErrorProcessor.mIsBlocking.not()) {
+                    true -> mMessageSubject.onNext(msg)
+                    false -> mMessageQueue.put(msg)
                 }
             }
         }
