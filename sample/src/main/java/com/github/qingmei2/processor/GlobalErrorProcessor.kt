@@ -15,6 +15,7 @@ import com.github.qingmei2.utils.RxDialog
 import io.reactivex.Observable
 import org.json.JSONException
 import java.net.ConnectException
+import java.util.concurrent.TimeUnit
 
 object GlobalErrorProcessor {
 
@@ -60,12 +61,21 @@ object GlobalErrorProcessor {
                             val waitLogin = AuthorizationErrorProcessResult.WaitLoginInQueue(
                                     lastRefreshStamp = retrySupplierError.timeStamp
                             )
-                            AuthorizationErrorProcessor.processTokenExpiredError(fragmentActivity, waitLogin)
+                            AuthorizationErrorProcessor
+                                    .processTokenExpiredError(fragmentActivity, waitLogin)
+                                    .retryWhen {
+                                        it.flatMap { processorError ->
+                                            when (processorError) {
+                                                is AuthorizationErrorProcessResult.WaitLoginInQueue ->
+                                                    Observable.timer(50, TimeUnit.MILLISECONDS)
+                                                else -> Observable.error(processorError)
+                                            }
+                                        }
+                                    }
                                     .onErrorReturn { processorError ->
                                         when (processorError) {
                                             is AuthorizationErrorProcessResult.LoginSuccess -> true
-                                            is AuthorizationErrorProcessResult.LoginFailed,
-                                            is AuthorizationErrorProcessResult.WaitLoginInQueue -> false
+                                            is AuthorizationErrorProcessResult.LoginFailed -> false
                                             else -> false
                                         }
                                     }

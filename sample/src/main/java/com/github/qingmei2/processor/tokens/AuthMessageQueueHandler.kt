@@ -7,7 +7,10 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 
-class AuthMessageQueueHandler : Runnable {
+class AuthMessageQueueHandler private constructor() : Runnable {
+
+    @Volatile
+    private var mCallMethodByUser: Boolean = false
 
     private var mService: ExecutorService = Executors.newSingleThreadExecutor()
 
@@ -21,6 +24,13 @@ class AuthMessageQueueHandler : Runnable {
     }
 
     override fun run() {
+        if (mCallMethodByUser) {
+            throw IllegalAccessException(
+                    "can't call run() method, use AuthMessageQueueHandler.getInstance() instead."
+            )
+        }
+        mCallMethodByUser = true
+
         while (true) {
             Thread.sleep(200)
             while (AuthorizationErrorProcessor.mIsBlocking.not()) {
